@@ -1,0 +1,198 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Phase 6 palette brighten (≈40%)
+ *   blue  #2B4EFF → #3554FF
+ *   purple #7B2FF7 → #A14DFF
+ *
+ * The body wash still runs blue→purple, but every stop is lifted so
+ * the whole surface reads brighter without losing legibility for
+ * white text.
+ */
+:root {
+  --ink: #ffffff;
+  --ink-strong: #ffffff;
+  --muted: rgba(255, 255, 255, 0.72);
+  --line: rgba(255, 255, 255, 0.16);
+  --blue: #3554ff;
+  --purple: #a14dff;
+  --gradient-brand: linear-gradient(135deg, #3554ff 0%, #a14dff 100%);
+  --gradient-body: linear-gradient(
+    135deg,
+    #3554ff 0%,
+    #6b4eff 50%,
+    #a14dff 100%
+  );
+  --ease-expo: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  background: #3554ff;
+}
+
+body {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 400;
+  color: var(--ink);
+  overflow-x: hidden;
+  background: var(--gradient-body);
+  background-attachment: fixed;
+  min-height: 100svh;
+}
+
+/* Lenis smooth scroll reset */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+::selection {
+  background: #ffffff;
+  color: #3554ff;
+}
+
+/* Cursor — hide native on desktop-only pointer devices */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body,
+  a,
+  button,
+  [role="button"],
+  [data-cursor] {
+    cursor: none;
+  }
+}
+
+/* Utility: keep gradient-text utility available (used over white cards) */
+.text-gradient {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* UI label style — small, bold, wide-tracked, uppercase */
+.ui-label {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+/*
+ * Wordmark sizes used by the "vb photographe" text.
+ *
+ * .wordmark-xl → hero h1 (unchanged Phase 7 sizes)
+ * .wordmark-md → footer wordmark (Phase 9: ~45% smaller than xl so the
+ *                footer no longer dominates the screen)
+ */
+.wordmark-xl {
+  font-size: 3.5rem;
+}
+@media (min-width: 640px) {
+  .wordmark-xl {
+    font-size: 6rem;
+  }
+}
+@media (min-width: 1024px) {
+  .wordmark-xl {
+    font-size: clamp(9rem, 10vw, 11rem);
+  }
+}
+
+.wordmark-md {
+  font-size: 2rem;
+}
+@media (min-width: 640px) {
+  .wordmark-md {
+    font-size: 3rem;
+  }
+}
+@media (min-width: 1024px) {
+  .wordmark-md {
+    font-size: clamp(4rem, 5.5vw, 5.5rem);
+  }
+}
+
+/* Marquee animation */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: marquee 30s linear infinite;
+  will-change: transform;
+}
+
+/* Hide scrollbar for horizontal scrollers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Reveal primitives */
+.reveal-mask {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+/* Focus ring — visible on gradient */
+:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* Scoped hover — used by .card class */
+.card {
+  position: relative;
+  overflow: hidden;
+}
+.card .card-image {
+  transform: scale(1);
+  transition: transform 900ms var(--ease-expo);
+  will-change: transform;
+}
+.card:hover .card-image {
+  transform: scale(1.06);
+}
+.card .card-tint {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(53, 84, 255, 0.55) 100%);
+  opacity: 0;
+  transition: opacity 700ms var(--ease-expo);
+  pointer-events: none;
+}
+.card:hover .card-tint {
+  opacity: 1;
+}

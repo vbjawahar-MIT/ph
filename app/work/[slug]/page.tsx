@@ -1,0 +1,63 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import PhotoGrid from "@/components/gallery/PhotoGrid";
+import { getAllCategorySlugs } from "@/lib/categories";
+import { getGalleryFor } from "@/lib/gallery";
+
+type Params = { slug: string };
+
+export async function generateStaticParams(): Promise<Params[]> {
+  return getAllCategorySlugs().map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const g = getGalleryFor(slug);
+  if (!g) return { title: "Not found — VB Photographe" };
+  return {
+    title: `${g.category.label} — VB Photographe`,
+    description: `${g.category.label} work by VB Photographe. ${g.count} ${
+      g.category.kind === "videos" ? "films" : "photographs"
+    }.`,
+  };
+}
+
+export default async function CategoryGalleryPage({
+  params,
+}: {
+  params: Promise<Params>;
+}) {
+  const { slug } = await params;
+  const gallery = getGalleryFor(slug);
+  if (!gallery) notFound();
+
+  const { category, items, count } = gallery;
+  const isVideos = category.kind === "videos";
+
+  return (
+    <section className="px-6 pb-32 pt-32 md:px-10 md:pt-40">
+      <div className="mx-auto max-w-[1600px]">
+        <p className="ui-label text-white/70">{category.label}</p>
+        <h1
+          className="mt-4 text-display font-bold lowercase tracking-display text-white"
+          style={{ lineHeight: 0.9 }}
+        >
+          {category.tagline}
+        </h1>
+        <p className="ui-label mt-6 text-white/60">
+          {count > 0
+            ? `${count} ${isVideos ? "films" : "photographs"}`
+            : "coming soon"}
+        </p>
+
+        <div className="mt-14 md:mt-16">
+          <PhotoGrid items={items} columns={isVideos ? 2 : 3} />
+        </div>
+      </div>
+    </section>
+  );
+}
