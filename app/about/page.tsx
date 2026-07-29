@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import RevealText from "@/components/RevealText";
-import ProtectedImage from "@/components/gallery/ProtectedImage";
+import AboutPortrait from "@/components/about/AboutPortrait";
 import StatsRow from "@/components/about/StatsRow";
-import { readFolder } from "@/lib/gallery";
 
 export const metadata: Metadata = {
   title: "About — VB Photographe",
@@ -29,31 +28,15 @@ const PHILOSOPHY_POINTS = [
 ];
 
 export default function AboutPage() {
-  const heroPhoto = readFolder("about", "images")[0] ?? null;
-
   return (
     <>
       {/* HERO — founder portrait + intro */}
       <section className="px-6 pb-24 pt-40 md:px-10 md:pb-32">
         <div className="mx-auto grid max-w-[1600px] gap-12 md:grid-cols-12 md:gap-16">
           <div className="md:col-span-5">
-            {heroPhoto ? (
-              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-sm shadow-[0_20px_60px_-30px_rgba(10,10,26,0.5)]">
-                <ProtectedImage
-                  src={heroPhoto.src}
-                  alt="Karthick VB — founder, VB Photographe Studio"
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 100vw, 40vw"
-                  quality={90}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex aspect-[4/5] w-full items-center justify-center rounded-sm border border-white/15 bg-white/[0.04]">
-                <p className="ui-label text-white/60">Portrait coming soon</p>
-              </div>
-            )}
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-sm shadow-[0_20px_60px_-30px_rgba(10,10,26,0.5)]">
+              <AboutPortrait />
+            </div>
           </div>
           <div className="flex flex-col justify-end md:col-span-7">
             <p className="ui-label text-white/70">About</p>
