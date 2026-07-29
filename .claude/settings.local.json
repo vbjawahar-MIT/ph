@@ -4,7 +4,10 @@
       "Bash(npm --version)",
       "Bash(npx --version)",
       "Bash(npm install *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(node scripts/build-manifest.mjs)",
+      "Bash(rm -rf .next)",
+      "Bash(git add *)"
     ]
   }
 }

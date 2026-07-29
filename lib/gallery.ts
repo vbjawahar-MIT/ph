@@ -1,26 +1,38 @@
 /**
- * Filesystem-backed gallery loader.
+ * Manifest-backed gallery loader.
  *
- * Runs entirely at build time inside Server Components and
- * `generateStaticParams`, so pages are pre-rendered as static HTML —
- * zero runtime filesystem cost, zero API layer.
+ * Runs at build time inside Server Components and `generateStaticParams`,
+ * so pages ship as static HTML with zero runtime filesystem cost.
  *
- * Design goals
- * ────────────
- *  • Drop-in scalability. New files in `public/assets/{folder}/` appear
- *    on the site on the next build with no code change.
- *  • Cover-first ordering. `cover.jpg` (or cover.jpeg/.png/.webp)
- *    always renders first. Otherwise a natural sort of filenames.
- *  • Format-agnostic. Any common image extension is treated as a
- *    photograph; any common video extension goes through the video
- *    lightbox instead. Uppercase extensions (Canon-style .JPG) work.
- *  • CMS-swappable. Components consume `getGalleryFor(slug)` — swap
- *    the body for a Sanity / Contentful / Supabase call later without
- *    changing any UI.
+ * Design
+ * ──────
+ *   • Source of truth: `lib/asset-manifest.json` — a JSON catalog of
+ *     `{ folder: [file, file, …] }` generated from public/assets/ by
+ *     `scripts/build-manifest.mjs` and committed to git. The raw JPGs
+ *     stay outside git (2.85 GB — ignored) and are served from
+ *     Cloudflare R2 in production.
+ *
+ *   • URL strategy: each `MediaItem.src` is prefixed by
+ *     `NEXT_PUBLIC_CDN_BASE_URL` when it's set. When unset (local
+ *     dev), URLs stay as `/assets/…` and Next serves them straight
+ *     from public/. When set to `https://<bucket>.r2.dev` (or a
+ *     Cloudflare custom domain), URLs become `<base>/assets/…` and
+ *     every photograph loads from Cloudflare.
+ *
+ *   • Cover-first: `cover.jpg`/.png/.webp/.avif (in the folder) is
+ *     pushed to index 0 of the returned items. Otherwise the first
+ *     natural-sorted file is the cover.
+ *
+ *   • Format-agnostic: image and video extensions are both tracked.
+ *     The Category's `kind` field decides which type is exposed for
+ *     each category — no cross-contamination.
+ *
+ *   • CMS-swappable: components consume `getGalleryFor(slug)` and
+ *     `getAllCategorySummaries()` — swap those two calls to hit
+ *     Sanity/Contentful/etc. later without touching the UI.
  */
 
-import fs from "node:fs";
-import path from "node:path";
+import manifest from "./asset-manifest.json";
 import {
   CATEGORIES,
   getCategoryBySlug,
@@ -52,14 +64,24 @@ const IMAGE_EXT = /\.(jpe?g|png|webp|avif)$/i;
 const VIDEO_EXT = /\.(mp4|webm|mov|m4v)$/i;
 const COVER_RE = /^cover\.(jpe?g|png|webp|avif)$/i;
 
-// Natural sort: "10_x.jpg" comes after "2_x.jpg", not before.
-const NATURAL = new Intl.Collator(undefined, {
-  numeric: true,
-  sensitivity: "base",
-});
+/**
+ * CDN prefix. Empty string in dev → URLs stay local. Set to
+ * `https://<bucket>.r2.dev` or `https://img.vbphotographe.com` in
+ * production → URLs point to Cloudflare.
+ *
+ * NEXT_PUBLIC_ prefix required because the value ends up in HTML
+ * rendered by Server Components AND may be referenced by client
+ * components (next/image constructs URLs at render time).
+ */
+const CDN_BASE =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_CDN_BASE_URL) ||
+  "";
 
-function assetsRoot(): string {
-  return path.join(process.cwd(), "public", "assets");
+function buildSrc(folder: string, file: string): string {
+  const path = `/assets/${folder}/${file}`;
+  if (!CDN_BASE) return path;
+  const base = CDN_BASE.replace(/\/+$/, "");
+  return `${base}${path}`;
 }
 
 function fileToMedia(folder: string, file: string): MediaItem | null {
@@ -67,7 +89,7 @@ function fileToMedia(folder: string, file: string): MediaItem | null {
   const isVideo = VIDEO_EXT.test(file);
   if (!isImage && !isVideo) return null;
   return {
-    src: `/assets/${folder}/${file}`,
+    src: buildSrc(folder, file),
     file,
     kind: isVideo ? "video" : "image",
     name: file.replace(/\.[^.]+$/, ""),
@@ -75,35 +97,22 @@ function fileToMedia(folder: string, file: string): MediaItem | null {
 }
 
 /**
- * Read every media file from a category folder. Missing folders return
- * an empty array so a new category listing can render immediately even
- * before any files are dropped in (e.g. "Traditional").
+ * Read every media file recorded for `folder` in the manifest.
+ * Missing folders return an empty array so a new category renders
+ * a "Coming soon" state until it's populated.
  */
 export function readFolder(folder: string, kind: CategoryKind): MediaItem[] {
-  const dir = path.join(assetsRoot(), folder);
-  if (!fs.existsSync(dir)) return [];
-
-  let files: string[];
-  try {
-    files = fs.readdirSync(dir);
-  } catch {
-    return [];
-  }
+  const files: string[] =
+    (manifest as Record<string, string[]>)[folder] ?? [];
 
   const media: MediaItem[] = [];
   let cover: MediaItem | null = null;
 
-  for (const f of files.sort(NATURAL.compare)) {
-    if (f.startsWith(".")) continue;
+  for (const f of files) {
     const item = fileToMedia(folder, f);
     if (!item) continue;
-
-    // A video-kind category exposes only videos; an image-kind category
-    // exposes only photos. This keeps cross-contamination impossible
-    // even if a folder ends up mixed.
     if (kind === "videos" && item.kind !== "video") continue;
     if (kind === "images" && item.kind !== "image") continue;
-
     if (COVER_RE.test(f)) {
       cover = item;
       continue;
@@ -111,10 +120,7 @@ export function readFolder(folder: string, kind: CategoryKind): MediaItem[] {
     media.push(item);
   }
 
-  // Cover-first ordering — either the explicit cover.jpg or the first
-  // natural-sorted item.
-  if (cover) return [cover, ...media];
-  return media;
+  return cover ? [cover, ...media] : media;
 }
 
 /** Full gallery for a single slug, cover-first. */

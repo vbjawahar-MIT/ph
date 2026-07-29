@@ -17,6 +17,28 @@ const nextConfig = {
         protocol: "https",
         hostname: "i.ytimg.com",
       },
+      // Cloudflare R2 — public dev subdomain
+      {
+        protocol: "https",
+        hostname: "*.r2.dev",
+      },
+      // Cloudflare R2 — S3-compatible endpoint (rarely used publicly
+      // but included so custom endpoint mappings work out of the box)
+      {
+        protocol: "https",
+        hostname: "*.r2.cloudflarestorage.com",
+      },
+      // Cloudflare Images
+      {
+        protocol: "https",
+        hostname: "imagedelivery.net",
+      },
+      // Custom Cloudflare-fronted domain (add your own here if you
+      // put the bucket behind e.g. img.vbphotographe.com)
+      {
+        protocol: "https",
+        hostname: "img.vbphotographe.com",
+      },
     ],
   },
 };
