@@ -33,12 +33,15 @@
  */
 
 import manifest from "./asset-manifest.json";
+import hostedImages from "./hosted-images.json";
 import {
   CATEGORIES,
   getCategoryBySlug,
   type Category,
   type CategoryKind,
 } from "./categories";
+
+const HOSTED: Record<string, string> = hostedImages as Record<string, string>;
 
 export type MediaKind = "image" | "video";
 
@@ -77,7 +80,36 @@ const CDN_BASE =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_CDN_BASE_URL) ||
   "";
 
+/**
+ * Map a filename to the source URL that will end up in the browser.
+ *
+ * Priority (per the Phase 11 image-migration brief):
+ *   1. If the filename starts with a number (e.g. "42.JPG") that has
+ *      a hosted URL in lib/hosted-images.json, use the hosted URL
+ *      directly. This bypasses CDN_BASE and points to the direct
+ *      kommododecks image URL resolved at build time.
+ *   2. Otherwise (cover.jpg, unmapped numbers, etc.) fall back to
+ *      `${CDN_BASE}/assets/{folder}/{file}` — the existing R2 / local
+ *      dev behaviour.
+ *
+ * The image numbering is preserved verbatim: bridal/1.jpg → hosted #1,
+ * groom/43.jpg → hosted #43, and so on across all 211 mapped numbers.
+ * Files whose numeric prefix has no mapping (candid-videos folder,
+ * cover files, unknown extras) fall through to the CDN path — nothing
+ * silently swaps.
+ */
+const NUMERIC_PREFIX_RE = /^(\d+)(?:[._-]|\.[^.]+$)/;
+
+function hostedUrlForFile(file: string): string | null {
+  const match = NUMERIC_PREFIX_RE.exec(file);
+  if (!match) return null;
+  const number = match[1];
+  return HOSTED[number] ?? null;
+}
+
 function buildSrc(folder: string, file: string): string {
+  const hosted = hostedUrlForFile(file);
+  if (hosted) return hosted;
   const path = `/assets/${folder}/${file}`;
   if (!CDN_BASE) return path;
   const base = CDN_BASE.replace(/\/+$/, "");

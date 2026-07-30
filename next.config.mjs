@@ -39,6 +39,12 @@ const nextConfig = {
         protocol: "https",
         hostname: "img.vbphotographe.com",
       },
+      // Kommodo share host serving the migrated photographs.
+      // See lib/hosted-images.json + scripts/fetch-hosted-images.mjs.
+      {
+        protocol: "https",
+        hostname: "plain-apac-prod-public.komododecks.com",
+      },
     ],
   },
 };

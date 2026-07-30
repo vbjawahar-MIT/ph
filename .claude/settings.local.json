@@ -20,7 +20,9 @@
       "Read(//c/tmp/kommodo/**)",
       "Bash(cygpath -u '/tmp')",
       "Bash(ls -la \"$\\(cygpath -u '/tmp'\\)/kommodo/portrait.jpg\")",
-      "Read(//c/Users/VBjaw/AppData/Local/Temp/**)"
+      "Read(//c/Users/VBjaw/AppData/Local/Temp/**)",
+      "Bash(node scripts/fetch-hosted-images.mjs)",
+      "Bash(wmic process *)"
     ]
   }
 }
