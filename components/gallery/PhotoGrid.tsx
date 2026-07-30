@@ -14,6 +14,15 @@ type Props = {
    * the tiles are larger.
    */
   columns?: 2 | 3;
+  /**
+   * How many tiles at the top of the grid should preload eagerly.
+   * These are the images most likely to be above the fold on any
+   * viewport (1 mobile, 2 tablet, 3 desktop → 4 gives a safety margin).
+   * Everything after this index gets native lazy loading + CSS
+   * `content-visibility: auto` so the browser skips render + layout
+   * work for offscreen tiles entirely.
+   */
+  priorityCount?: number;
 };
 
 const COLUMN_CLASSES = {
@@ -27,14 +36,35 @@ const SIZES = {
 } as const;
 
 /**
+ * Brand-tone placeholder. Zero-byte "blur" — a CSS gradient sits
+ * behind each tile so visitors see something brand-consistent
+ * immediately, and the photograph covers it on decode. No extra
+ * HTTP request, no base64 payload.
+ */
+const PLACEHOLDER_BG =
+  "linear-gradient(135deg, #3554ff 0%, #6b4eff 50%, #a14dff 100%)";
+
+/**
  * Responsive gallery grid with the "premium mutual hover" effect —
  * when the visitor hovers one tile, the others soften (blur + fade +
  * de-saturate), the focussed tile lifts, scales a touch, and brightens.
  *
  * Clicking a tile opens the Lightbox at that item's index. Cover-first
  * ordering is preserved because the parent passes `items[0]` first.
+ *
+ * Perf (Phase 13)
+ *  - First `priorityCount` tiles preload eagerly (fetchpriority=high
+ *    on the <img>) so the LCP element paints as fast as possible.
+ *  - Everything after that gets native `loading="lazy"` (Next default)
+ *    plus CSS `content-visibility: auto` so offscreen tiles cost
+ *    almost nothing. `contain-intrinsic-size` reserves the slot so
+ *    scrolling doesn't jump when tiles hydrate.
  */
-export default function PhotoGrid({ items, columns = 3 }: Props) {
+export default function PhotoGrid({
+  items,
+  columns = 3,
+  priorityCount = 4,
+}: Props) {
   const [hovered, setHovered] = useState<number | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
@@ -54,6 +84,16 @@ export default function PhotoGrid({ items, columns = 3 }: Props) {
       >
         {items.map((item, i) => {
           const isDimmed = hovered !== null && hovered !== i;
+          const isPriority = i < priorityCount;
+          // aspect-[4/5] wants a 4×5 intrinsic size hint for the browser
+          // to reserve space for offscreen tiles. 320×400 is a comfortable
+          // seed — the actual rendered size still adapts to the column width.
+          const containStyle: React.CSSProperties = isPriority
+            ? {}
+            : {
+                contentVisibility: "auto",
+                containIntrinsicSize: "400px 500px",
+              };
           return (
             <button
               key={item.src}
@@ -73,9 +113,13 @@ export default function PhotoGrid({ items, columns = 3 }: Props) {
                   hovered === i
                     ? "translateY(-4px) scale(1.015)"
                     : "translateY(0) scale(1)",
+                ...containStyle,
               }}
             >
-              <div className="aspect-[4/5] w-full overflow-hidden bg-white/5">
+              <div
+                className="aspect-[4/5] w-full overflow-hidden"
+                style={{ background: PLACEHOLDER_BG }}
+              >
                 {item.kind === "video" ? (
                   <VideoThumbnail src={item.src} />
                 ) : (
@@ -85,6 +129,8 @@ export default function PhotoGrid({ items, columns = 3 }: Props) {
                     fill
                     sizes={SIZES[columns]}
                     quality={85}
+                    priority={isPriority}
+                    fetchPriority={isPriority ? "high" : "auto"}
                     className="h-full w-full"
                   />
                 )}

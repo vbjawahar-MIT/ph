@@ -6,6 +6,10 @@ const nextConfig = {
   devIndicators: false,
   images: {
     qualities: [75, 85, 90],
+    // 1 year. The hosted image URLs are immutable (kommododecks generates
+    // per-upload IDs), so cache them aggressively both at the Next.js
+    // image optimizer layer and in browsers.
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       {
         protocol: "https",

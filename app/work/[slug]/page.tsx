@@ -71,7 +71,11 @@ export default async function CategoryGalleryPage({
         </p>
 
         <div className="mt-14 md:mt-16">
-          <PhotoGrid items={items} columns={isVideos ? 2 : 3} />
+          <PhotoGrid
+            items={items}
+            columns={isVideos ? 2 : 3}
+            priorityCount={4}
+          />
         </div>
       </div>
     </section>

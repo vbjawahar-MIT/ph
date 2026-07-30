@@ -23,7 +23,8 @@
       "Read(//c/Users/VBjaw/AppData/Local/Temp/**)",
       "Bash(node scripts/fetch-hosted-images.mjs)",
       "Bash(wmic process *)",
-      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/work/candid-videos)"
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/work/candid-videos)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/work/couple-portrait)"
     ]
   }
 }
