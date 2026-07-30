@@ -6,8 +6,21 @@ import { getGalleryFor } from "@/lib/gallery";
 
 type Params = { slug: string };
 
+/**
+ * `candid-videos` is served by its own dedicated static file
+ * (`app/work/candid-videos/page.tsx`) because its media lives on
+ * YouTube, not in the filesystem. Excluding it here prevents a route
+ * collision — otherwise Next.js could serve either route depending
+ * on host + build order, and the `[slug]` variant would render an
+ * empty PhotoGrid ("no files yet") because the candid-videos folder
+ * has no local files.
+ */
+const EXCLUDE_FROM_DYNAMIC_ROUTE = new Set(["candid-videos"]);
+
 export async function generateStaticParams(): Promise<Params[]> {
-  return getAllCategorySlugs().map((slug) => ({ slug }));
+  return getAllCategorySlugs()
+    .filter((slug) => !EXCLUDE_FROM_DYNAMIC_ROUTE.has(slug))
+    .map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -32,6 +45,9 @@ export default async function CategoryGalleryPage({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
+  // Belt-and-braces: never let the dynamic route serve candid-videos.
+  // The dedicated static page must always win.
+  if (EXCLUDE_FROM_DYNAMIC_ROUTE.has(slug)) notFound();
   const gallery = getGalleryFor(slug);
   if (!gallery) notFound();
 
