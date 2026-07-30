@@ -106,8 +106,11 @@ export const CATEGORIES: Category[] = [
     tagline: "the day, in motion.",
     folder: "candid-videos",
     kind: "videos",
-    // First YouTube video's thumbnail — real content, not a placeholder.
-    coverThumb: "https://i.ytimg.com/vi/FqgyJ1x1Jzg/maxresdefault.jpg",
+    // First YouTube video's thumbnail. Uses hqdefault (480x360) — a
+    // size that always exists on every YouTube video, and is plenty
+    // for the card's display area. maxresdefault is 4x the pixels
+    // for the same rendered size on mobile.
+    coverThumb: "https://i.ytimg.com/vi/FqgyJ1x1Jzg/hqdefault.jpg",
     youtubeVideoIds: [
       "FqgyJ1x1Jzg",
       "CXoybPeLk1Y",

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import YouTubeEmbed from "@/components/gallery/YouTubeEmbed";
+import CandidVideosGrid from "@/components/gallery/CandidVideosGrid";
 import { getCategoryBySlug } from "@/lib/categories";
 import { notFound } from "next/navigation";
 
@@ -10,12 +10,15 @@ import { notFound } from "next/navigation";
  * category's media is hosted on YouTube rather than in the local
  * filesystem. Header, spacing, animations and page width match the
  * other category pages exactly.
+ *
+ * The grid + video state now live in CandidVideosGrid (client) so
+ * we can coordinate a single active iframe at a time — see
+ * components/gallery/CandidVideosGrid.tsx for the reasoning.
  */
 
 export const metadata: Metadata = {
   title: "Candid Videos — VB Photographe",
-  description:
-    "Candid films from VB Photographe — the day, in motion.",
+  description: "Candid films from VB Photographe — the day, in motion.",
 };
 
 export default function CandidVideosPage() {
@@ -33,19 +36,13 @@ export default function CandidVideosPage() {
         >
           {category.tagline}
         </h1>
-        <p className="ui-label mt-6 text-white/60">
-          {videoIds.length} films
-        </p>
+        <p className="ui-label mt-6 text-white/60">{videoIds.length} films</p>
 
-        <div className="mt-14 grid gap-6 md:mt-16 md:grid-cols-2 md:gap-8 lg:gap-10">
-          {videoIds.map((id, i) => (
-            <YouTubeEmbed
-              key={id}
-              videoId={id}
-              title={`${category.label} — film ${i + 1}`}
-              priority={i < 2}
-            />
-          ))}
+        <div className="mt-14 md:mt-16">
+          <CandidVideosGrid
+            videoIds={videoIds}
+            categoryLabel={category.label}
+          />
         </div>
       </div>
     </section>

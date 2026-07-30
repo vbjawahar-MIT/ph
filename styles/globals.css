@@ -149,6 +149,30 @@ html.lenis body {
   will-change: transform;
 }
 
+/*
+ * Respect the OS-level reduce-motion setting. Users who've asked for
+ * less motion (motion sickness / battery / preference) get:
+ *   - the marquee frozen
+ *   - the .card image scale-on-hover disabled
+ *   - the .card-tint opacity transition made instant
+ *   - the reveal-mask transition made instant (Framer Motion still
+ *     handles its own via useReducedMotion)
+ *
+ * We keep the elements visible — we only kill the movement.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+  .card .card-image,
+  .card .card-tint {
+    transition-duration: 0.01ms !important;
+  }
+  .card:hover .card-image {
+    transform: none;
+  }
+}
+
 /* Hide scrollbar for horizontal scrollers */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
