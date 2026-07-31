@@ -4,6 +4,18 @@ import nodemailer from "nodemailer";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Secure Gmail sender for the /contact form.
+ *
+ * Reads credentials only from server-side environment variables — never
+ * from the request or from any client-visible bundle:
+ *   GMAIL_USER            — the Gmail address that sends the message
+ *   GMAIL_APP_PASSWORD    — 16-char Google app password (NOT the account password)
+ *
+ * Legacy env names SMTP_USER / SMTP_PASS are still honoured so existing
+ * Render/Vercel envs keep working after this change.
+ */
+
 type Payload = {
   name?: unknown;
   email?: unknown;
@@ -16,7 +28,7 @@ type Payload = {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// simple in-memory rate limit per IP (best-effort — resets on restart)
+// In-memory rate limit per IP (best-effort — resets on cold start)
 const RATE_LIMIT: Map<string, number[]> = new Map();
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 3;
@@ -42,110 +54,82 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-type MailFields = {
-  name: string;
-  email: string;
-  phone: string;
-  subject: string;
-  message: string;
-};
-
-function renderHtml(f: MailFields): string {
-  return `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #0a0a1a;">
-      <h2 style="margin: 0 0 16px; font-size: 18px;">New enquiry via vbphotographe.com</h2>
-      <table style="border-collapse: collapse;">
-        <tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Name</td><td>${esc(f.name)}</td></tr>
-        <tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Email</td><td>${esc(f.email)}</td></tr>
-        ${f.phone ? `<tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Phone</td><td>${esc(f.phone)}</td></tr>` : ""}
-        ${f.subject ? `<tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Subject</td><td>${esc(f.subject)}</td></tr>` : ""}
-      </table>
-      <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;" />
-      <p style="white-space: pre-wrap;">${esc(f.message)}</p>
-    </div>
-  `;
+// Sanitize header-bound fields so a newline in `name`/`subject` cannot
+// be used to inject additional SMTP headers.
+function safeHeader(s: string, max = 200): string {
+  return s.replace(/[\r\n]+/g, " ").slice(0, max);
 }
 
-function renderText(f: MailFields): string {
-  return [
-    `New enquiry via vbphotographe.com`,
-    ``,
-    `Name: ${f.name}`,
-    `Email: ${f.email}`,
-    f.phone ? `Phone: ${f.phone}` : null,
-    f.subject ? `Subject: ${f.subject}` : null,
-    ``,
-    f.message,
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
+const BASE_HEADERS = {
+  "Cache-Control": "no-store, max-age=0",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "no-referrer",
+} as const;
 
-async function sendViaResend(f: MailFields, to: string): Promise<void> {
-  const key = process.env.RESEND_API_KEY!;
-  // Resend requires the `from` domain to be verified. Until a custom domain is
-  // verified, Resend accepts `onboarding@resend.dev` for testing.
-  const from = process.env.RESEND_FROM ?? "VB Photographe <onboarding@resend.dev>";
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      reply_to: `${f.name} <${f.email}>`,
-      subject: f.subject
-        ? `[Website] ${f.subject}`
-        : `[Website] New enquiry from ${f.name}`,
-      text: renderText(f),
-      html: renderHtml(f),
-    }),
+function json(
+  data: Record<string, unknown>,
+  status: number,
+  extra: Record<string, string> = {}
+) {
+  return NextResponse.json(data, {
+    status,
+    headers: { ...BASE_HEADERS, ...extra },
   });
+}
 
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(`Resend ${res.status}: ${detail || res.statusText}`);
+function getGmailCreds(): { user: string; pass: string } | null {
+  const user = process.env.GMAIL_USER ?? process.env.SMTP_USER ?? "";
+  const pass = process.env.GMAIL_APP_PASSWORD ?? process.env.SMTP_PASS ?? "";
+  if (!user || !pass) return null;
+  return { user, pass };
+}
+
+// Only allow same-origin submissions from the deployed site.
+function isAllowedOrigin(req: Request): boolean {
+  const origin = req.headers.get("origin");
+  // Same-origin fetches from the browser include Origin; server-to-server
+  // callers (curl, tests) usually omit it — accept those too so localhost
+  // dev + Render health checks aren't blocked.
+  if (!origin) return true;
+
+  const host = req.headers.get("host") ?? "";
+  try {
+    const o = new URL(origin);
+    if (o.host === host) return true;
+  } catch {
+    return false;
   }
+  return false;
 }
 
-async function sendViaSmtp(f: MailFields, to: string): Promise<void> {
-  const user = process.env.SMTP_USER!;
-  const pass = process.env.SMTP_PASS!;
-  const host = process.env.SMTP_HOST ?? "smtp.gmail.com";
-  const port = Number(process.env.SMTP_PORT ?? 465);
-
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  });
-
-  await transporter.sendMail({
-    from: `"VB Photographe — Website" <${user}>`,
-    to,
-    replyTo: `${f.name} <${f.email}>`,
-    subject: f.subject
-      ? `[Website] ${f.subject}`
-      : `[Website] New enquiry from ${f.name}`,
-    text: renderText(f),
-    html: renderHtml(f),
+export async function OPTIONS(req: Request) {
+  const origin = req.headers.get("origin") ?? "";
+  return new Response(null, {
+    status: 204,
+    headers: {
+      ...BASE_HEADERS,
+      "Access-Control-Allow-Origin": origin || "null",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "600",
+    },
   });
 }
 
 export async function POST(req: Request) {
+  if (!isAllowedOrigin(req)) {
+    return json({ ok: false, error: "Forbidden." }, 403);
+  }
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
     "unknown";
 
   if (!ratelimit(ip)) {
-    return NextResponse.json(
+    return json(
       { ok: false, error: "Too many requests. Try again in a minute." },
-      { status: 429 }
+      429
     );
   }
 
@@ -153,93 +137,118 @@ export async function POST(req: Request) {
   try {
     body = (await req.json()) as Payload;
   } catch {
-    return NextResponse.json(
-      { ok: false, error: "Invalid request body." },
-      { status: 400 }
-    );
+    return json({ ok: false, error: "Invalid request body." }, 400);
   }
 
-  // Honeypot — silently succeed to not tip off the bot
+  // Honeypot — silently succeed so bots don't learn they were caught.
   if (asStr(body.company).length > 0) {
-    return NextResponse.json({ ok: true });
+    return json({ ok: true }, 200);
   }
 
-  const fields: MailFields = {
-    name: asStr(body.name),
-    email: asStr(body.email),
-    phone: asStr(body.phone),
-    subject: asStr(body.subject),
-    message: asStr(body.message),
-  };
+  const name = asStr(body.name);
+  const email = asStr(body.email);
+  const phone = asStr(body.phone);
+  const subject = asStr(body.subject);
+  const message = asStr(body.message);
 
-  if (fields.name.length < 2) {
-    return NextResponse.json(
-      { ok: false, error: "Please enter your name." },
-      { status: 400 }
-    );
+  if (name.length < 2 || name.length > 120) {
+    return json({ ok: false, error: "Please enter your name." }, 400);
   }
-  if (!EMAIL_RE.test(fields.email)) {
-    return NextResponse.json(
+  if (!EMAIL_RE.test(email) || email.length > 254) {
+    return json(
       { ok: false, error: "Please enter a valid email address." },
-      { status: 400 }
+      400
     );
   }
-  if (fields.message.length < 5) {
-    return NextResponse.json(
-      { ok: false, error: "Please include a message." },
-      { status: 400 }
-    );
+  if (phone && phone.length > 40) {
+    return json({ ok: false, error: "Phone number is too long." }, 400);
+  }
+  if (subject.length > 200) {
+    return json({ ok: false, error: "Subject is too long." }, 400);
+  }
+  if (message.length < 5) {
+    return json({ ok: false, error: "Please include a message." }, 400);
+  }
+  if (message.length > 5000) {
+    return json({ ok: false, error: "Message is too long." }, 400);
   }
 
+  const creds = getGmailCreds();
   const CONTACT_TO = process.env.CONTACT_TO ?? "vbphotograph2015@gmail.com";
-  const hasResend = Boolean(process.env.RESEND_API_KEY);
-  const hasSmtp = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
 
-  if (!hasResend && !hasSmtp) {
-    return NextResponse.json(
+  if (!creds) {
+    return json(
       {
         ok: false,
         error:
           "Email service is not configured on the server. Please email vbphotograph2015@gmail.com directly.",
       },
-      { status: 503 }
+      503
     );
   }
 
+  const safeName = safeHeader(name);
+  const safeSubject = safeHeader(subject);
+  const mailSubject = safeSubject
+    ? `[Website] ${safeSubject}`
+    : `[Website] New enquiry from ${safeName}`;
+
+  const html = `
+    <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #0a0a1a;">
+      <h2 style="margin: 0 0 16px; font-size: 18px;">New enquiry via vbphotographe.com</h2>
+      <table style="border-collapse: collapse;">
+        <tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Name</td><td>${esc(name)}</td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Email</td><td>${esc(email)}</td></tr>
+        ${phone ? `<tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Phone</td><td>${esc(phone)}</td></tr>` : ""}
+        ${subject ? `<tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Subject</td><td>${esc(subject)}</td></tr>` : ""}
+      </table>
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="white-space: pre-wrap;">${esc(message)}</p>
+    </div>
+  `;
+
+  const text = [
+    `New enquiry via vbphotographe.com`,
+    ``,
+    `Name: ${name}`,
+    `Email: ${email}`,
+    phone ? `Phone: ${phone}` : null,
+    subject ? `Subject: ${subject}` : null,
+    ``,
+    message,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: { user: creds.user, pass: creds.pass },
+  });
+
   try {
-    if (hasResend) {
-      await sendViaResend(fields, CONTACT_TO);
-    } else {
-      await sendViaSmtp(fields, CONTACT_TO);
-    }
-  } catch (primaryErr) {
-    console.error("[/api/contact] primary send failed", primaryErr);
-    // Fall back to the other provider if it's also configured.
-    if (hasResend && hasSmtp) {
-      try {
-        await sendViaSmtp(fields, CONTACT_TO);
-      } catch (fallbackErr) {
-        console.error("[/api/contact] fallback send failed", fallbackErr);
-        return NextResponse.json(
-          {
-            ok: false,
-            error:
-              "Could not send message right now. Please email vbphotograph2015@gmail.com directly.",
-          },
-          { status: 502 }
-        );
-      }
-    } else {
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Could not send message right now. Please email vbphotograph2015@gmail.com directly.",
-        },
-        { status: 502 }
-      );
-    }
+    await transporter.sendMail({
+      from: `"VB Photographe — Website" <${creds.user}>`,
+      to: CONTACT_TO,
+      replyTo: `${safeName} <${email}>`,
+      subject: mailSubject,
+      text,
+      html,
+    });
+  } catch (err) {
+    // Never leak Gmail error details (they can include the account username
+    // in an AUTH failure message). Log server-side, return a generic error.
+    console.error("[/api/contact] send failed", err);
+    return json(
+      {
+        ok: false,
+        error:
+          "Could not send message right now. Please email vbphotograph2015@gmail.com directly.",
+      },
+      502
+    );
   }
 
-  return NextResponse.json({ ok: true });
+  return json({ ok: true }, 200);
 }

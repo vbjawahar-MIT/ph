@@ -9,8 +9,12 @@ node_modules
 out
 build
 
-# env
-.env*.local
+# env — never commit real credentials. Only .env.example / .env.local.example
+# (placeholder files) may be committed.
+.env
+.env.*
+!.env.example
+!.env.*.example
 
 # misc
 .DS_Store
