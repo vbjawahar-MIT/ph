@@ -169,7 +169,10 @@ export async function POST(req: Request) {
   if (message.length < 5) {
     return json({ ok: false, error: "Please include a message." }, 400);
   }
-  if (message.length > 5000) {
+  // Allow long-form briefs (100+ lines / multi-paragraph enquiries).
+  // 50k chars ≈ 8k words / ~30 A4 pages — well above any real brief,
+  // still below the ~1 MB JSON body cap Next.js enforces on route handlers.
+  if (message.length > 50000) {
     return json({ ok: false, error: "Message is too long." }, 400);
   }
 
