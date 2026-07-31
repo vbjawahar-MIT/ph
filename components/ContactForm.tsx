@@ -130,7 +130,15 @@ export default function ContactForm() {
         error?: string;
       };
       if (!res.ok || !data.ok) {
-        throw new Error(data.error ?? "Could not send message.");
+        // Validation errors (400) come from the server — surface them so
+        // the visitor can fix their input. Any other failure gets the
+        // generic message the operator asked for.
+        const isValidation = res.status === 400 && !!data.error;
+        throw new Error(
+          isValidation
+            ? (data.error as string)
+            : "Message could not be sent. Please try again."
+        );
       }
       setStatus("sent");
       setName("");
@@ -140,7 +148,11 @@ export default function ContactForm() {
       setMessage("");
     } catch (err) {
       setStatus("error");
-      setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : "Message could not be sent. Please try again."
+      );
     }
   }
 
@@ -233,7 +245,7 @@ export default function ContactForm() {
         <div role="status" aria-live="polite" className="min-h-[1.25rem]">
           {status === "sent" && (
             <p className="text-sm text-white">
-              thank you — your message is on its way. i answer within two days.
+              Message sent successfully.
             </p>
           )}
           {status === "error" && errorMsg && (

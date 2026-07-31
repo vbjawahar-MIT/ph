@@ -177,13 +177,14 @@ export async function POST(req: Request) {
   const CONTACT_TO = process.env.CONTACT_TO ?? "vbphotograph2015@gmail.com";
 
   if (!creds) {
+    // Never expose configuration state to visitors. Log the real cause,
+    // return the same generic error the visitor sees on any send failure.
+    console.error(
+      "[/api/contact] GMAIL_USER or GMAIL_APP_PASSWORD is not set on the server"
+    );
     return json(
-      {
-        ok: false,
-        error:
-          "Email service is not configured on the server. Please email vbphotograph2015@gmail.com directly.",
-      },
-      503
+      { ok: false, error: "Message could not be sent. Please try again." },
+      500
     );
   }
 
@@ -228,7 +229,7 @@ export async function POST(req: Request) {
   });
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"VB Photographe — Website" <${creds.user}>`,
       to: CONTACT_TO,
       replyTo: `${safeName} <${email}>`,
@@ -236,17 +237,16 @@ export async function POST(req: Request) {
       text,
       html,
     });
+    // Server-side confirmation the mail server accepted the message.
+    console.log(
+      `[/api/contact] sent → ${CONTACT_TO}  messageId=${info.messageId}  accepted=${JSON.stringify(info.accepted)}`
+    );
   } catch (err) {
-    // Never leak Gmail error details (they can include the account username
-    // in an AUTH failure message). Log server-side, return a generic error.
+    // Never leak Gmail error details to the visitor. Log for operators.
     console.error("[/api/contact] send failed", err);
     return json(
-      {
-        ok: false,
-        error:
-          "Could not send message right now. Please email vbphotograph2015@gmail.com directly.",
-      },
-      502
+      { ok: false, error: "Message could not be sent. Please try again." },
+      500
     );
   }
 
