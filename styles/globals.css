@@ -108,16 +108,16 @@ html.lenis body {
  *                footer no longer dominates the screen)
  */
 .wordmark-xl {
-  font-size: 3.5rem;
+  font-size: 2.25rem;
 }
 @media (min-width: 640px) {
   .wordmark-xl {
-    font-size: 6rem;
+    font-size: 3.75rem;
   }
 }
 @media (min-width: 1024px) {
   .wordmark-xl {
-    font-size: clamp(9rem, 10vw, 11rem);
+    font-size: clamp(4.5rem, 6vw, 6.5rem);
   }
 }
 

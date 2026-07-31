@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type Payload = {
   name?: unknown;
@@ -41,6 +42,100 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+type MailFields = {
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+};
+
+function renderHtml(f: MailFields): string {
+  return `
+    <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #0a0a1a;">
+      <h2 style="margin: 0 0 16px; font-size: 18px;">New enquiry via vbphotographe.com</h2>
+      <table style="border-collapse: collapse;">
+        <tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Name</td><td>${esc(f.name)}</td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Email</td><td>${esc(f.email)}</td></tr>
+        ${f.phone ? `<tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Phone</td><td>${esc(f.phone)}</td></tr>` : ""}
+        ${f.subject ? `<tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Subject</td><td>${esc(f.subject)}</td></tr>` : ""}
+      </table>
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="white-space: pre-wrap;">${esc(f.message)}</p>
+    </div>
+  `;
+}
+
+function renderText(f: MailFields): string {
+  return [
+    `New enquiry via vbphotographe.com`,
+    ``,
+    `Name: ${f.name}`,
+    `Email: ${f.email}`,
+    f.phone ? `Phone: ${f.phone}` : null,
+    f.subject ? `Subject: ${f.subject}` : null,
+    ``,
+    f.message,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function sendViaResend(f: MailFields, to: string): Promise<void> {
+  const key = process.env.RESEND_API_KEY!;
+  // Resend requires the `from` domain to be verified. Until a custom domain is
+  // verified, Resend accepts `onboarding@resend.dev` for testing.
+  const from = process.env.RESEND_FROM ?? "VB Photographe <onboarding@resend.dev>";
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      reply_to: `${f.name} <${f.email}>`,
+      subject: f.subject
+        ? `[Website] ${f.subject}`
+        : `[Website] New enquiry from ${f.name}`,
+      text: renderText(f),
+      html: renderHtml(f),
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Resend ${res.status}: ${detail || res.statusText}`);
+  }
+}
+
+async function sendViaSmtp(f: MailFields, to: string): Promise<void> {
+  const user = process.env.SMTP_USER!;
+  const pass = process.env.SMTP_PASS!;
+  const host = process.env.SMTP_HOST ?? "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT ?? 465);
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+
+  await transporter.sendMail({
+    from: `"VB Photographe — Website" <${user}>`,
+    to,
+    replyTo: `${f.name} <${f.email}>`,
+    subject: f.subject
+      ? `[Website] ${f.subject}`
+      : `[Website] New enquiry from ${f.name}`,
+    text: renderText(f),
+    html: renderHtml(f),
+  });
+}
+
 export async function POST(req: Request) {
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -69,97 +164,81 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const name = asStr(body.name);
-  const email = asStr(body.email);
-  const phone = asStr(body.phone);
-  const subject = asStr(body.subject);
-  const message = asStr(body.message);
+  const fields: MailFields = {
+    name: asStr(body.name),
+    email: asStr(body.email),
+    phone: asStr(body.phone),
+    subject: asStr(body.subject),
+    message: asStr(body.message),
+  };
 
-  if (name.length < 2) {
+  if (fields.name.length < 2) {
     return NextResponse.json(
       { ok: false, error: "Please enter your name." },
       { status: 400 }
     );
   }
-  if (!EMAIL_RE.test(email)) {
+  if (!EMAIL_RE.test(fields.email)) {
     return NextResponse.json(
       { ok: false, error: "Please enter a valid email address." },
       { status: 400 }
     );
   }
-  if (message.length < 5) {
+  if (fields.message.length < 5) {
     return NextResponse.json(
       { ok: false, error: "Please include a message." },
       { status: 400 }
     );
   }
 
-  const SMTP_USER = process.env.SMTP_USER;
-  const SMTP_PASS = process.env.SMTP_PASS;
   const CONTACT_TO = process.env.CONTACT_TO ?? "vbphotograph2015@gmail.com";
-  const SMTP_HOST = process.env.SMTP_HOST ?? "smtp.gmail.com";
-  const SMTP_PORT = Number(process.env.SMTP_PORT ?? 465);
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  const hasSmtp = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
 
-  if (!SMTP_USER || !SMTP_PASS) {
+  if (!hasResend && !hasSmtp) {
     return NextResponse.json(
       {
         ok: false,
         error:
-          "Email service is not configured. See .env.local.example for setup.",
+          "Email service is not configured on the server. Please email vbphotograph2015@gmail.com directly.",
       },
       { status: 503 }
     );
   }
 
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-  });
-
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #0a0a1a;">
-      <h2 style="margin: 0 0 16px; font-size: 18px;">New enquiry via vbphotographe.com</h2>
-      <table style="border-collapse: collapse;">
-        <tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Name</td><td>${esc(name)}</td></tr>
-        <tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Email</td><td>${esc(email)}</td></tr>
-        ${phone ? `<tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Phone</td><td>${esc(phone)}</td></tr>` : ""}
-        ${subject ? `<tr><td style="padding: 4px 12px 4px 0; color: #6b7280;">Subject</td><td>${esc(subject)}</td></tr>` : ""}
-      </table>
-      <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;" />
-      <p style="white-space: pre-wrap;">${esc(message)}</p>
-    </div>
-  `;
-
-  const text = [
-    `New enquiry via vbphotographe.com`,
-    ``,
-    `Name: ${name}`,
-    `Email: ${email}`,
-    phone ? `Phone: ${phone}` : null,
-    subject ? `Subject: ${subject}` : null,
-    ``,
-    message,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
   try {
-    await transporter.sendMail({
-      from: `"VB Photographe — Website" <${SMTP_USER}>`,
-      to: CONTACT_TO,
-      replyTo: `${name} <${email}>`,
-      subject: subject ? `[Website] ${subject}` : `[Website] New enquiry from ${name}`,
-      text,
-      html,
-    });
-  } catch (err) {
-    console.error("[/api/contact] send failed", err);
-    return NextResponse.json(
-      { ok: false, error: "Could not send message. Please email directly." },
-      { status: 502 }
-    );
+    if (hasResend) {
+      await sendViaResend(fields, CONTACT_TO);
+    } else {
+      await sendViaSmtp(fields, CONTACT_TO);
+    }
+  } catch (primaryErr) {
+    console.error("[/api/contact] primary send failed", primaryErr);
+    // Fall back to the other provider if it's also configured.
+    if (hasResend && hasSmtp) {
+      try {
+        await sendViaSmtp(fields, CONTACT_TO);
+      } catch (fallbackErr) {
+        console.error("[/api/contact] fallback send failed", fallbackErr);
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Could not send message right now. Please email vbphotograph2015@gmail.com directly.",
+          },
+          { status: 502 }
+        );
+      }
+    } else {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Could not send message right now. Please email vbphotograph2015@gmail.com directly.",
+        },
+        { status: 502 }
+      );
+    }
   }
 
   return NextResponse.json({ ok: true });
