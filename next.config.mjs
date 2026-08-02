@@ -5,63 +5,22 @@ const nextConfig = {
   // back-to-top indicator owns that corner.
   devIndicators: false,
   images: {
-    qualities: [75, 85, 90],
-    // WebP only. AVIF was tested but Render's free-tier 0.1 CPU
-    // cannot encode 40+ variants in parallel fast enough during a
-    // lazy-scroll burst — many requests time out at Cloudflare's
-    // edge and the browser renders them as broken images. WebP is
-    // ~4× faster to encode and still 60-70% smaller than JPEG.
-    // Re-enable AVIF once Render tier is upgraded (Starter has 0.5 CPU).
-    formats: ["image/webp"],
-    // 1 year. The hosted image URLs are immutable (kommododecks generates
-    // per-upload IDs), so cache them aggressively both at the Next.js
-    // image optimizer layer and in browsers.
-    minimumCacheTTL: 31536000,
-    // Tighten deviceSizes to the breakpoints we actually use — fewer
-    // srcset entries means faster parsing + less HTML weight, and
-    // the browser still picks a well-fitting variant.
-    deviceSizes: [360, 640, 750, 828, 1080, 1200, 1600, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        // YouTube video thumbnails used by the Candid Videos category
-        // card and the click-to-load YouTubeEmbed poster frame.
-        protocol: "https",
-        hostname: "i.ytimg.com",
-      },
-      // Cloudflare R2 — public dev subdomain
-      {
-        protocol: "https",
-        hostname: "*.r2.dev",
-      },
-      // Cloudflare R2 — S3-compatible endpoint (rarely used publicly
-      // but included so custom endpoint mappings work out of the box)
-      {
-        protocol: "https",
-        hostname: "*.r2.cloudflarestorage.com",
-      },
-      // Cloudflare Images
-      {
-        protocol: "https",
-        hostname: "imagedelivery.net",
-      },
-      // Custom Cloudflare-fronted domain (add your own here if you
-      // put the bucket behind e.g. img.vbphotographe.com)
-      {
-        protocol: "https",
-        hostname: "img.vbphotographe.com",
-      },
-      // Kommodo share host serving the migrated photographs.
-      // See lib/hosted-images.json + scripts/fetch-hosted-images.mjs.
-      {
-        protocol: "https",
-        hostname: "plain-apac-prod-public.komododecks.com",
-      },
-    ],
+    // Bypass the Next.js image optimizer entirely on Render free tier.
+    //
+    // The optimizer transcodes each source image on demand at the origin.
+    // On Render's 0.1 CPU free tier that pipeline cannot keep up with a
+    // gallery visitor who scrolls: many /_next/image requests stall at
+    // Cloudflare's edge and the browser renders those tiles as broken.
+    //
+    // Kommodo (the source origin) is already fronted by Cloudflare, serves
+    // globally at edge speeds, and returns cache-friendly headers. Sending
+    // the browser the raw source URLs bypasses the origin CPU bottleneck
+    // entirely — the trade-off is per-image bandwidth (source ~500KB vs
+    // optimizer WebP ~175KB), still comfortably within any reasonable
+    // performance budget for a photography portfolio.
+    //
+    // Re-enable optimization once Render is upgraded to Starter (0.5 CPU).
+    unoptimized: true,
   },
   compress: true,
   async headers() {
