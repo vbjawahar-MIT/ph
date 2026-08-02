@@ -6,10 +6,13 @@ const nextConfig = {
   devIndicators: false,
   images: {
     qualities: [75, 85, 90],
-    // AVIF first, WebP fallback. AVIF encodes 25-40% smaller than WebP
-    // at the same perceptual quality — the encode cost is paid once
-    // (minimumCacheTTL below keeps optimizer output for a year).
-    formats: ["image/avif", "image/webp"],
+    // WebP only. AVIF was tested but Render's free-tier 0.1 CPU
+    // cannot encode 40+ variants in parallel fast enough during a
+    // lazy-scroll burst — many requests time out at Cloudflare's
+    // edge and the browser renders them as broken images. WebP is
+    // ~4× faster to encode and still 60-70% smaller than JPEG.
+    // Re-enable AVIF once Render tier is upgraded (Starter has 0.5 CPU).
+    formats: ["image/webp"],
     // 1 year. The hosted image URLs are immutable (kommododecks generates
     // per-upload IDs), so cache them aggressively both at the Next.js
     // image optimizer layer and in browsers.
