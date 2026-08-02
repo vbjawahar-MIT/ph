@@ -76,13 +76,16 @@ export default async function CategoryGalleryPage({
             items={items}
             columns={isVideos ? 2 : 3}
             priorityCount={4}
-            eagerCount={12}
+            eagerCount={4}
           />
         </div>
 
         {/* Warm the images of adjacent galleries during browser idle
-            time so a click into "next gallery" paints instantly. */}
-        <GalleryIdlePrefetch currentSlug={slug} />
+            time so a click into "next gallery" paints instantly.
+            Batch kept small so the Render free-tier optimizer isn't
+            saturated by speculative work while the visitor is still
+            reading the current gallery. */}
+        <GalleryIdlePrefetch currentSlug={slug} count={4} />
       </div>
     </section>
   );
