@@ -224,11 +224,21 @@ export async function POST(req: Request) {
     .filter(Boolean)
     .join("\n");
 
+  // Port 587 (STARTTLS) is more reliable on managed hosts than 465, some of
+  // which throttle outbound 465 to reduce spam abuse. Nodemailer defaults
+  // have no socket timeout, so a network stall would hang the request until
+  // the platform's edge kills it (60s+). These explicit timeouts guarantee
+  // the visitor sees the generic error within ~10s if the mail server or
+  // network is unreachable, instead of a spinner that never resolves.
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
+    requireTLS: true,
     auth: { user: creds.user, pass: creds.pass },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   });
 
   try {
