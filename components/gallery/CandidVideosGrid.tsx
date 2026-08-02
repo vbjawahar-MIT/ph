@@ -65,6 +65,8 @@ export default function CandidVideosGrid({ videoIds, categoryLabel }: Props) {
             title={`${categoryLabel} — film ${i + 1}`}
             isActive={activeId === id}
             onActivate={() => activate(id)}
+            posterLoading="eager"
+            posterFetchPriority={i === 0 ? "high" : "auto"}
           />
         </div>
       ))}

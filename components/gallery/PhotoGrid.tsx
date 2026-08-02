@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import ProtectedImage from "./ProtectedImage";
 import VideoThumbnail from "./VideoThumbnail";
 import Lightbox from "./Lightbox";
@@ -15,14 +15,20 @@ type Props = {
    */
   columns?: 2 | 3;
   /**
-   * How many tiles at the top of the grid should preload eagerly.
-   * These are the images most likely to be above the fold on any
-   * viewport (1 mobile, 2 tablet, 3 desktop → 4 gives a safety margin).
-   * Everything after this index gets native lazy loading + CSS
-   * `content-visibility: auto` so the browser skips render + layout
-   * work for offscreen tiles entirely.
+   * Tiles at the top of the grid that use next/image `priority` — this
+   * emits a `<link rel=preload as=image fetchpriority=high>` in the
+   * document head so the LCP paints as fast as possible. Keep this
+   * small (~4): each extra preload competes with the true LCP image
+   * for the first bytes on the wire.
    */
   priorityCount?: number;
+  /**
+   * Tiles up to this index (exclusive) skip lazy loading — the browser
+   * begins fetching them during initial HTML parse instead of waiting
+   * for scroll. Use this for the first screen or two of tiles that
+   * aren't LCP but should still feel instant on scroll.
+   */
+  eagerCount?: number;
 };
 
 const COLUMN_CLASSES = {
@@ -44,6 +50,99 @@ const SIZES = {
 const PLACEHOLDER_BG =
   "linear-gradient(135deg, #3554ff 0%, #6b4eff 50%, #a14dff 100%)";
 
+type TileProps = {
+  item: MediaItem;
+  index: number;
+  columns: 2 | 3;
+  loadStrategy: "priority" | "eager" | "lazy";
+  isDimmed: boolean;
+  isHovered: boolean;
+  onEnter: (i: number) => void;
+  onOpen: (i: number) => void;
+};
+
+/**
+ * Single tile — memoized on its props so a hover change on one tile
+ * doesn't re-render every other tile in the grid (previously the
+ * whole grid re-rendered on every mouse move over a tile).
+ */
+const Tile = memo(function Tile({
+  item,
+  index,
+  columns,
+  loadStrategy,
+  isDimmed,
+  isHovered,
+  onEnter,
+  onOpen,
+}: TileProps) {
+  // aspect-[4/5] wants a 4×5 intrinsic size hint for the browser
+  // to reserve space for offscreen tiles. 320×400 is a comfortable
+  // seed — the actual rendered size still adapts to the column width.
+  const containStyle: React.CSSProperties =
+    loadStrategy === "lazy"
+      ? {
+          contentVisibility: "auto",
+          containIntrinsicSize: "400px 500px",
+        }
+      : {};
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(index)}
+      onMouseEnter={() => onEnter(index)}
+      data-cursor-label={item.kind === "video" ? "watch" : "view"}
+      aria-label={
+        item.kind === "video"
+          ? `Play video ${index + 1}`
+          : `Open photo ${index + 1}`
+      }
+      className="group relative block w-full overflow-hidden rounded-sm shadow-[0_20px_60px_-30px_rgba(10,10,26,0.5)] transition-all duration-700 ease-expo"
+      style={{
+        filter: isDimmed
+          ? "brightness(0.72) saturate(0.75) blur(1px)"
+          : "brightness(1) saturate(1) blur(0)",
+        transform: isHovered
+          ? "translateY(-4px) scale(1.015)"
+          : "translateY(0) scale(1)",
+        ...containStyle,
+      }}
+    >
+      <div
+        className="aspect-[4/5] w-full overflow-hidden"
+        style={{ background: PLACEHOLDER_BG }}
+      >
+        {item.kind === "video" ? (
+          <VideoThumbnail src={item.src} />
+        ) : (
+          <ProtectedImage
+            src={item.src}
+            alt=""
+            fill
+            sizes={SIZES[columns]}
+            quality={85}
+            priority={loadStrategy === "priority"}
+            loading={loadStrategy === "lazy" ? "lazy" : "eager"}
+            fetchPriority={loadStrategy === "priority" ? "high" : "auto"}
+            className="h-full w-full"
+          />
+        )}
+        {/* Focussed brighten overlay */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 transition-opacity duration-700 ease-expo"
+          style={{
+            opacity: isHovered ? 1 : 0,
+            background:
+              "radial-gradient(120% 80% at 50% 100%, rgba(255,255,255,0.16) 0%, transparent 60%)",
+          }}
+        />
+      </div>
+    </button>
+  );
+});
+
 /**
  * Responsive gallery grid with the "premium mutual hover" effect —
  * when the visitor hovers one tile, the others soften (blur + fade +
@@ -52,21 +151,31 @@ const PLACEHOLDER_BG =
  * Clicking a tile opens the Lightbox at that item's index. Cover-first
  * ordering is preserved because the parent passes `items[0]` first.
  *
- * Perf (Phase 13)
- *  - First `priorityCount` tiles preload eagerly (fetchpriority=high
- *    on the <img>) so the LCP element paints as fast as possible.
- *  - Everything after that gets native `loading="lazy"` (Next default)
- *    plus CSS `content-visibility: auto` so offscreen tiles cost
- *    almost nothing. `contain-intrinsic-size` reserves the slot so
- *    scrolling doesn't jump when tiles hydrate.
+ * Loading strategy (Phase 14)
+ *  - First `priorityCount` tiles (default 4) get next/image `priority`:
+ *    Next injects `<link rel=preload as=image fetchpriority=high>` in
+ *    the document head so the LCP paints in the first RTT.
+ *  - Tiles up to `eagerCount` (default 12) skip lazy loading — the
+ *    browser starts fetching them during HTML parse rather than waiting
+ *    for scroll. Uses `fetchpriority=auto` so they don't compete with
+ *    the LCP preloads for bandwidth.
+ *  - Everything past `eagerCount` gets native `loading="lazy"` plus
+ *    CSS `content-visibility: auto` so offscreen tiles cost almost
+ *    nothing until scroll approaches them.
  */
 export default function PhotoGrid({
   items,
   columns = 3,
   priorityCount = 4,
+  eagerCount = 12,
 }: Props) {
   const [hovered, setHovered] = useState<number | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const handleEnter = useCallback((i: number) => setHovered(i), []);
+  const handleOpen = useCallback((i: number) => setOpenIndex(i), []);
+  const clearHover = useCallback(() => setHovered(null), []);
+  const closeLightbox = useCallback(() => setOpenIndex(null), []);
 
   if (items.length === 0) {
     return (
@@ -80,72 +189,27 @@ export default function PhotoGrid({
     <>
       <div
         className={`grid gap-6 md:gap-8 lg:gap-10 ${COLUMN_CLASSES[columns]}`}
-        onMouseLeave={() => setHovered(null)}
+        onMouseLeave={clearHover}
       >
         {items.map((item, i) => {
-          const isDimmed = hovered !== null && hovered !== i;
-          const isPriority = i < priorityCount;
-          // aspect-[4/5] wants a 4×5 intrinsic size hint for the browser
-          // to reserve space for offscreen tiles. 320×400 is a comfortable
-          // seed — the actual rendered size still adapts to the column width.
-          const containStyle: React.CSSProperties = isPriority
-            ? {}
-            : {
-                contentVisibility: "auto",
-                containIntrinsicSize: "400px 500px",
-              };
+          const loadStrategy: "priority" | "eager" | "lazy" =
+            i < priorityCount
+              ? "priority"
+              : i < eagerCount
+                ? "eager"
+                : "lazy";
           return (
-            <button
+            <Tile
               key={item.src}
-              type="button"
-              onClick={() => setOpenIndex(i)}
-              onMouseEnter={() => setHovered(i)}
-              data-cursor-label={item.kind === "video" ? "watch" : "view"}
-              aria-label={
-                item.kind === "video" ? `Play video ${i + 1}` : `Open photo ${i + 1}`
-              }
-              className="group relative block w-full overflow-hidden rounded-sm shadow-[0_20px_60px_-30px_rgba(10,10,26,0.5)] transition-all duration-700 ease-expo"
-              style={{
-                filter: isDimmed
-                  ? "brightness(0.72) saturate(0.75) blur(1px)"
-                  : "brightness(1) saturate(1) blur(0)",
-                transform:
-                  hovered === i
-                    ? "translateY(-4px) scale(1.015)"
-                    : "translateY(0) scale(1)",
-                ...containStyle,
-              }}
-            >
-              <div
-                className="aspect-[4/5] w-full overflow-hidden"
-                style={{ background: PLACEHOLDER_BG }}
-              >
-                {item.kind === "video" ? (
-                  <VideoThumbnail src={item.src} />
-                ) : (
-                  <ProtectedImage
-                    src={item.src}
-                    alt=""
-                    fill
-                    sizes={SIZES[columns]}
-                    quality={85}
-                    priority={isPriority}
-                    fetchPriority={isPriority ? "high" : "auto"}
-                    className="h-full w-full"
-                  />
-                )}
-                {/* Focussed brighten overlay */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 transition-opacity duration-700 ease-expo"
-                  style={{
-                    opacity: hovered === i ? 1 : 0,
-                    background:
-                      "radial-gradient(120% 80% at 50% 100%, rgba(255,255,255,0.16) 0%, transparent 60%)",
-                  }}
-                />
-              </div>
-            </button>
+              item={item}
+              index={i}
+              columns={columns}
+              loadStrategy={loadStrategy}
+              isDimmed={hovered !== null && hovered !== i}
+              isHovered={hovered === i}
+              onEnter={handleEnter}
+              onOpen={handleOpen}
+            />
           );
         })}
       </div>
@@ -153,7 +217,7 @@ export default function PhotoGrid({
       <Lightbox
         items={items}
         index={openIndex}
-        onClose={() => setOpenIndex(null)}
+        onClose={closeLightbox}
         onChange={setOpenIndex}
       />
     </>

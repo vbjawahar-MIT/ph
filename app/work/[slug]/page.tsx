@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PhotoGrid from "@/components/gallery/PhotoGrid";
+import GalleryIdlePrefetch from "@/components/gallery/GalleryIdlePrefetch";
 import { getAllCategorySlugs } from "@/lib/categories";
 import { getGalleryFor } from "@/lib/gallery";
 
@@ -75,8 +76,13 @@ export default async function CategoryGalleryPage({
             items={items}
             columns={isVideos ? 2 : 3}
             priorityCount={4}
+            eagerCount={12}
           />
         </div>
+
+        {/* Warm the images of adjacent galleries during browser idle
+            time so a click into "next gallery" paints instantly. */}
+        <GalleryIdlePrefetch currentSlug={slug} />
       </div>
     </section>
   );

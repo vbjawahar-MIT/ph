@@ -11,6 +11,11 @@ type Props = {
    *  guarantee only one iframe is mounted at a time. If omitted the
    *  component manages its own local state (backwards compatible). */
   onActivate?: () => void;
+  /** Native <img> loading strategy for the poster. Default "lazy" —
+   *  set "eager" when the grid wants posters loaded on first paint. */
+  posterLoading?: "lazy" | "eager";
+  /** fetchpriority hint for the poster. */
+  posterFetchPriority?: "high" | "low" | "auto";
 };
 
 /**
@@ -40,6 +45,8 @@ export default function YouTubeEmbed({
   title,
   isActive,
   onActivate,
+  posterLoading = "lazy",
+  posterFetchPriority = "auto",
 }: Props) {
   // Fallback to local state when the parent doesn't manage activation.
   const [localPlay, setLocalPlay] = useState(false);
@@ -89,8 +96,9 @@ export default function YouTubeEmbed({
             <img
               src={posterSrc}
               alt=""
-              loading="lazy"
+              loading={posterLoading}
               decoding="async"
+              fetchPriority={posterFetchPriority}
               onError={() => setPosterErrored(true)}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-expo group-hover:scale-[1.03]"
             />

@@ -6,10 +6,19 @@ const nextConfig = {
   devIndicators: false,
   images: {
     qualities: [75, 85, 90],
+    // AVIF first, WebP fallback. AVIF encodes 25-40% smaller than WebP
+    // at the same perceptual quality — the encode cost is paid once
+    // (minimumCacheTTL below keeps optimizer output for a year).
+    formats: ["image/avif", "image/webp"],
     // 1 year. The hosted image URLs are immutable (kommododecks generates
     // per-upload IDs), so cache them aggressively both at the Next.js
     // image optimizer layer and in browsers.
     minimumCacheTTL: 31536000,
+    // Tighten deviceSizes to the breakpoints we actually use — fewer
+    // srcset entries means faster parsing + less HTML weight, and
+    // the browser still picks a well-fitting variant.
+    deviceSizes: [360, 640, 750, 828, 1080, 1200, 1600, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: "https",
@@ -50,6 +59,27 @@ const nextConfig = {
         hostname: "plain-apac-prod-public.komododecks.com",
       },
     ],
+  },
+  compress: true,
+  async headers() {
+    return [
+      {
+        // Next handles _next/static with hashed URLs immutably by
+        // default, but pinning it here means edge caches (Cloudflare
+        // in front of Render) always see the immutable directive.
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        // Optimizer output — 1yr immutable. Matches minimumCacheTTL.
+        source: "/_next/image",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+    ];
   },
 };
 
