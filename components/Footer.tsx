@@ -125,6 +125,18 @@ export default function Footer() {
           <p className="text-xs tracking-wide text-ink/50">
             © 2015 — 2026 VB Photographe
           </p>
+          <p className="text-xs tracking-wide text-ink/50">
+            Designed and Developed by:{" "}
+            <a
+              href="https://www.linkedin.com/in/jawahar-vb/"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-cursor-label="open"
+              className="font-medium text-gold underline decoration-gold/40 underline-offset-4 transition-colors duration-500 hover:text-gold-light hover:decoration-gold"
+            >
+              Jawahar VB
+            </a>
+          </p>
           <p className="ui-label text-ink/40">{SITE.location}</p>
         </div>
       </div>
