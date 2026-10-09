@@ -33,7 +33,7 @@ export default function HomeIndicator() {
       aria-label="Back to top"
       data-cursor-label="top"
       onClick={scrollTop}
-      className="group fixed bottom-5 left-5 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-white/10 backdrop-blur-md transition-all duration-500 ease-expo hover:scale-110 hover:border-white hover:bg-white/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.35)] md:bottom-8 md:left-8 md:h-14 md:w-14"
+      className="group fixed bottom-5 left-5 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-gold/40 bg-noir/85 shadow-[0_12px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-500 ease-expo hover:scale-110 hover:border-gold hover:bg-gold md:bottom-8 md:left-8 md:h-14 md:w-14"
       initial={{ opacity: 0, y: 16, scale: 0.85 }}
       animate={{
         opacity: visible ? 1 : 0,
@@ -44,7 +44,7 @@ export default function HomeIndicator() {
       style={{ pointerEvents: visible ? "auto" : "none" }}
     >
       <span
-        className="text-sm font-bold tracking-[0.06em] text-white transition-transform duration-500 ease-expo group-hover:-translate-y-0.5 md:text-base"
+        className="font-serif text-base font-semibold tracking-[0.06em] text-gold transition-all duration-500 ease-expo group-hover:-translate-y-0.5 group-hover:text-noir md:text-lg"
         style={{ lineHeight: 1 }}
       >
         VB

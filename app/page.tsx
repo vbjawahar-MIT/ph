@@ -1,75 +1,98 @@
 import Link from "next/link";
 import Marquee from "@/components/Marquee";
-import HeroContent from "@/components/hero/HeroContent";
-import HeroWatermark from "@/components/hero/HeroWatermark";
+import HeroContent, { HeroMeta } from "@/components/hero/HeroContent";
+import HeroSlider, { type HeroSlide } from "@/components/hero/HeroSlider";
 import CategoryGrid from "@/components/gallery/CategoryGrid";
 import ContactDetails from "@/components/ContactDetails";
 import { getAllCategorySummaries } from "@/lib/gallery";
-import { SITE } from "@/lib/site-config";
+
+/**
+ * Hero photographs — landscape frames from the existing galleries. The
+ * first slide is the owner's pick. Positions are the focal point for the
+ * portrait (mobile) and landscape (desktop) crops.
+ */
+const HERO_PICKS = [
+  { folder: "couple-portrait", file: "120.jpg", mobile: "44% 30%", desktop: "50% 35%" },
+  { folder: "couple-portrait", file: "185.jpg", mobile: "66% 40%", desktop: "50% 30%" },
+  { folder: "bridal", file: "9.jpg", mobile: "86% 40%", desktop: "50% 45%" },
+];
 
 export default function HomePage() {
   const summaries = getAllCategorySummaries();
 
+  const heroSlides: HeroSlide[] = HERO_PICKS.flatMap((pick) => {
+    const item = summaries
+      .find((s) => s.category.folder === pick.folder)
+      ?.items.find((i) => i.file === pick.file && i.kind === "image");
+    return item ? [{ src: item.src, mobile: pick.mobile, desktop: pick.desktop }] : [];
+  });
+  // Fallback if the picks are ever renamed: first category cover.
+  if (heroSlides.length === 0) {
+    const cover = summaries.find((s) => s.cover?.kind === "image")?.cover;
+    if (cover) heroSlides.push({ src: cover.src });
+  }
+
   return (
     <>
-      {/* HERO — single gold watermark behind the wordmark. Nav logo
-          is the only foreground brand mark. Overflow-hidden so the
-          watermark can never push out of the section. */}
-      <section className="relative flex min-h-[86svh] flex-col justify-end overflow-hidden px-6 pb-14 pt-32 md:px-10 md:pb-20 md:pt-36">
-        <HeroWatermark logoSrc={SITE.logo?.src ?? null} />
+      {/* HERO — full-screen cinematic slider */}
+      <HeroSlider slides={heroSlides} meta={<HeroMeta />}>
         <HeroContent />
-      </section>
+      </HeroSlider>
 
-      {/* FEATURED — all populated categories, clean 3-col grid */}
+      {/* FEATURED — all categories, clean grid */}
       <section
         aria-labelledby="featured-heading"
-        className="px-6 py-20 md:px-10 md:py-24"
+        className="px-6 py-24 md:px-10 md:py-32"
       >
-        <div className="mx-auto max-w-[1600px]">
-          <header className="mb-12 flex flex-col justify-between gap-6 md:mb-16 md:flex-row md:items-end">
-            <div>
-              <p className="ui-label text-white/70">Selected work</p>
-              <h2
-                id="featured-heading"
-                className="mt-3 text-display-sm font-bold lowercase tracking-display text-white"
-                style={{ lineHeight: 0.95 }}
-              >
-                featured <span className="text-white/70">stories</span>
-              </h2>
-            </div>
-            <Link
-              href="/work"
-              data-cursor-label="view all"
-              className="ui-label self-start border-b border-white/60 pb-1 text-white/80 transition-colors duration-500 hover:border-white hover:text-white md:self-end"
+        <div className="mx-auto max-w-[1440px]">
+          <header data-reveal className="mx-auto mb-14 max-w-2xl text-center md:mb-20">
+            <p className="eyebrow">Selected work</p>
+            <h2
+              id="featured-heading"
+              className="mt-4 font-serif text-display-sm font-medium tracking-serif text-ink"
+              style={{ lineHeight: 1.05 }}
             >
-              browse the archive →
-            </Link>
+              Featured <em className="italic text-accent">Stories</em>
+            </h2>
+            <span aria-hidden className="gold-rule mx-auto mt-6" />
           </header>
 
           <CategoryGrid categories={summaries} priorityCount={3} />
+
+          <div data-reveal className="mt-14 flex justify-center md:mt-20">
+            <Link
+              href="/work"
+              data-cursor-label="view all"
+              className="btn btn-outline"
+            >
+              Browse the Archive <span aria-hidden>→</span>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* MARQUEE — wedding-service labels (no videos post-Phase 8) */}
-      <Marquee
-        items={[
-          "bridal portraits",
-          "groom portraits",
-          "couple portrait",
-          "baby shoot",
-          "pre-wedding",
-          "traditional",
-        ]}
-        gradient
-      />
+      {/* MARQUEE — wedding-service labels on a dark band */}
+      <div className="theme-dark bg-noir">
+        <Marquee
+          items={[
+            "Bridal Portraits",
+            "Groom Portraits",
+            "Couple Portrait",
+            "Baby Shoot",
+            "Pre-Wedding",
+            "Traditional",
+          ]}
+          gradient
+        />
+      </div>
 
       {/* CONTACT STRIP — phone + address near the bottom of home */}
-      <section className="border-t border-white/15 px-6 py-20 md:px-10 md:py-28">
+      <section data-reveal className="bg-surface-alt px-6 py-24 md:px-10 md:py-28">
         <ContactDetails
           eyebrow="Studio"
           heading={
             <>
-              visit <span className="text-white/70">or call</span>
+              Visit <em className="italic text-accent">or Call</em>
             </>
           }
         />

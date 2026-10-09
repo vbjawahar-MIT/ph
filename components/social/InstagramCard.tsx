@@ -26,9 +26,11 @@ export default function InstagramCard({ variant = "card" }: Props) {
         rel="noopener noreferrer"
         data-cursor-label="follow"
         aria-label={`Follow @${handle} on Instagram (opens in a new tab)`}
-        className="group inline-flex items-center gap-3 text-2xl font-bold lowercase tracking-display text-white transition-opacity duration-500 hover:opacity-70"
+        className="group inline-flex items-center gap-3 font-serif text-xl text-ink transition-colors duration-500 hover:text-gold"
       >
-        <InstagramGlyph className="h-6 w-6 shrink-0" />
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold/40 text-gold transition-colors duration-500 group-hover:bg-gold group-hover:text-noir">
+          <InstagramGlyph className="h-4 w-4" />
+        </span>
         <span>Instagram</span>
       </a>
     );
@@ -41,21 +43,21 @@ export default function InstagramCard({ variant = "card" }: Props) {
       rel="noopener noreferrer"
       data-cursor-label="follow"
       aria-label={`Follow @${handle} on Instagram (opens in a new tab)`}
-      className="group flex items-center justify-between gap-6 rounded-sm border border-white/15 bg-white/[0.04] p-6 backdrop-blur-md transition-all duration-500 ease-expo hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/[0.08] hover:shadow-[0_20px_60px_-30px_rgba(255,255,255,0.35)] md:p-7"
+      className="group flex items-center justify-between gap-6 rounded-2xl border border-line/10 bg-card p-6 shadow-soft transition-all duration-500 ease-expo hover:-translate-y-0.5 hover:shadow-lift md:p-8"
     >
       <div className="flex items-center gap-5">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition-transform duration-500 ease-expo group-hover:scale-110 md:h-12 md:w-12">
-          <InstagramGlyph className="h-5 w-5 md:h-6 md:w-6" />
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-accent/30 text-accent transition-all duration-500 ease-expo group-hover:scale-110 group-hover:border-gold group-hover:bg-gold group-hover:text-noir">
+          <InstagramGlyph className="h-5 w-5" />
         </div>
         <div>
-          <p className="ui-label text-white/60">Instagram</p>
-          <p className="mt-1 text-lg font-bold lowercase tracking-display text-white md:text-xl">
-            follow @{handle}
+          <p className="ui-label text-ink/55">Instagram</p>
+          <p className="mt-1 font-serif text-xl text-ink md:text-2xl">
+            Follow @{handle}
           </p>
         </div>
       </div>
-      <span className="ui-label whitespace-nowrap text-white/60 transition-colors duration-500 group-hover:text-white">
-        open →
+      <span className="ui-label whitespace-nowrap text-accent transition-transform duration-500 ease-expo group-hover:translate-x-1">
+        Open →
       </span>
     </a>
   );

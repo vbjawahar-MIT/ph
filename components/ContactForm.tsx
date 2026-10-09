@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 type FieldProps = {
   id: string;
@@ -36,7 +36,7 @@ function Field({
       e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => onChange(e.target.value),
     className:
-      "peer w-full border-0 border-b border-white/25 bg-transparent pb-3 pt-8 text-lg text-white outline-none placeholder:text-white/40 focus:border-transparent",
+      "peer w-full border-0 border-b border-line/20 bg-transparent pb-3 pt-8 text-base text-ink outline-none placeholder:text-ink/40 focus:border-transparent md:text-lg",
   };
 
   return (
@@ -49,7 +49,7 @@ function Field({
           fontSize: floating ? "0.72rem" : "1.05rem",
           textTransform: floating ? "uppercase" : "none",
           letterSpacing: floating ? "0.15em" : "0",
-          color: floating ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.9)",
+          color: floating ? "rgb(var(--accent))" : "rgb(var(--ink) / 0.6)",
           fontWeight: floating ? 600 : 400,
         }}
       >
@@ -69,7 +69,7 @@ function Field({
       )}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left bg-white transition-transform duration-500 ease-expo"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left bg-gold transition-transform duration-500 ease-expo"
         style={{ transform: focused ? "scaleX(1)" : "scaleX(0)" }}
       />
     </div>
@@ -90,6 +90,14 @@ export default function ContactForm() {
 
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Arriving from a package's "Book Your Slot" (/contact?package=…):
+  // pre-fill the subject. Read on mount so the page stays static.
+  useEffect(() => {
+    const pkg = new URLSearchParams(window.location.search).get("package");
+    const clean = pkg?.replace(/[\r\n\t]+/g, " ").trim().slice(0, 150);
+    if (clean) setSubject((s) => s || `Booking enquiry: ${clean}`);
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -160,7 +168,7 @@ export default function ContactForm() {
 
   return (
     <form
-      className="grid gap-10"
+      className="grid gap-8"
       onSubmit={onSubmit}
       aria-label="Contact form"
       noValidate
@@ -183,37 +191,42 @@ export default function ContactForm() {
         />
       </div>
 
-      <Field
-        id="name"
-        label="Your name"
-        value={name}
-        onChange={setName}
-        autoComplete="name"
-        required
-      />
-      <Field
-        id="email"
-        label="Email address"
-        type="email"
-        value={email}
-        onChange={setEmail}
-        autoComplete="email"
-        required
-      />
-      <Field
-        id="phone"
-        label="Phone number"
-        type="tel"
-        value={phone}
-        onChange={setPhone}
-        autoComplete="tel"
-      />
-      <Field
-        id="subject"
-        label="Subject"
-        value={subject}
-        onChange={setSubject}
-      />
+      {/* Paired fields sit side by side on wider screens (layout only) */}
+      <div className="grid gap-8 md:grid-cols-2 md:gap-x-10">
+        <Field
+          id="name"
+          label="Your name"
+          value={name}
+          onChange={setName}
+          autoComplete="name"
+          required
+        />
+        <Field
+          id="email"
+          label="Email address"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          autoComplete="email"
+          required
+        />
+      </div>
+      <div className="grid gap-8 md:grid-cols-2 md:gap-x-10">
+        <Field
+          id="phone"
+          label="Phone number"
+          type="tel"
+          value={phone}
+          onChange={setPhone}
+          autoComplete="tel"
+        />
+        <Field
+          id="subject"
+          label="Subject"
+          value={subject}
+          onChange={setSubject}
+        />
+      </div>
       <Field
         id="message"
         label="Tell me about the project"
@@ -224,32 +237,50 @@ export default function ContactForm() {
       />
 
       <div className="flex flex-col items-start gap-4 pt-2">
-        <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
+        <div className="flex w-full flex-col items-start gap-6 md:flex-row md:items-center">
           <button
             type="submit"
             data-cursor-label={status === "sending" ? "…" : "send"}
-            className="ui-label rounded-full border border-white/80 bg-transparent px-6 py-3 text-white transition-all duration-500 hover:scale-105 hover:border-white hover:bg-white hover:text-[#3554ff] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-transparent disabled:hover:text-white"
+            className="btn btn-gold group w-full px-9 py-4 text-[0.95rem] sm:w-auto"
             disabled={disabled}
           >
             {status === "sending"
-              ? "sending…"
+              ? "Sending…"
               : status === "sent"
-                ? "sent — thank you"
-                : "send message"}
+                ? "Sent — Thank You"
+                : "Send Message"}
+            {status === "idle" || status === "error" ? (
+              <svg
+                aria-hidden
+                viewBox="0 0 16 16"
+                className="h-4 w-4 transition-transform duration-500 ease-expo group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+              >
+                <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : null}
           </button>
-          <p className="ui-label text-white/70">
-            or write directly: vbphotograph2015@gmail.com
+          <p className="text-sm text-ink/60">
+            or write directly:{" "}
+            <a
+              href="mailto:vbphotograph2015@gmail.com"
+              className="text-accent underline decoration-gold/40 underline-offset-4 hover:decoration-gold"
+            >
+              vbphotograph2015@gmail.com
+            </a>
           </p>
         </div>
 
         <div role="status" aria-live="polite" className="min-h-[1.25rem]">
           {status === "sent" && (
-            <p className="text-sm text-white">
+            <p className="text-sm font-medium text-emerald-700">
               Message sent successfully.
             </p>
           )}
           {status === "error" && errorMsg && (
-            <p className="text-sm text-white/90">
+            <p className="text-sm font-medium text-red-700">
               <span className="mr-1" aria-hidden>
                 ✕
               </span>

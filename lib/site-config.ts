@@ -60,6 +60,11 @@ export const SITE = {
       "107, Ammapet Main Road, Opp to Sri Soundharraja Perumal Temple, Salem, Tamil Nadu 636001, India",
   },
   logo: detectLogo(),
+  /** Monogram-only crop of the gold logo (no lettering) for the nav
+   *  lockup, where the wordmark is set in type beside it. */
+  logoMark: fs.existsSync(path.join(PUBLIC_DIR, "logo/logo-mark-gold.png"))
+    ? { src: "/logo/logo-mark-gold.png" }
+    : null,
   social: {
     instagram: {
       handle: "vbphotographe",

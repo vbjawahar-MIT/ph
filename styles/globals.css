@@ -3,29 +3,46 @@
 @tailwind utilities;
 
 /*
- * Phase 6 palette brighten (≈40%)
- *   blue  #2B4EFF → #3554FF
- *   purple #7B2FF7 → #A14DFF
+ * Design system — black · ivory · soft gold.
  *
- * The body wash still runs blue→purple, but every stop is lifted so
- * the whole surface reads brighter without losing legibility for
- * white text.
+ * Colours are stored as RGB triplets so Tailwind opacity modifiers work
+ * (text-ink/70, border-line/10, bg-card …). The page is light by default;
+ * any element can flip to the dark palette with `.theme-dark` and every
+ * semantic token inside it follows. Text that sits on top of photographs
+ * keeps plain `text-white` so it never depends on the section theme.
  */
+:root,
+.theme-light {
+  --surface: 247 244 238; /* ivory page */
+  --surface-alt: 239 233 222; /* warm sand band */
+  --card: 255 255 255;
+  --ink: 24 21 18; /* near-black text */
+  --accent: 122 92 36; /* deep gold — passes AA on ivory */
+  --line: 24 21 18;
+}
+
+.theme-dark {
+  --surface: 11 11 11;
+  --surface-alt: 20 20 20;
+  --card: 24 24 24;
+  --ink: 255 255 255;
+  --accent: 201 165 92; /* soft gold — passes AA on black */
+  --line: 255 255 255;
+  color: rgb(var(--ink));
+}
+
 :root {
-  --ink: #ffffff;
-  --ink-strong: #ffffff;
-  --muted: rgba(255, 255, 255, 0.72);
-  --line: rgba(255, 255, 255, 0.16);
-  --blue: #3554ff;
-  --purple: #a14dff;
-  --gradient-brand: linear-gradient(135deg, #3554ff 0%, #a14dff 100%);
-  --gradient-body: linear-gradient(
-    135deg,
-    #3554ff 0%,
-    #6b4eff 50%,
-    #a14dff 100%
-  );
   --ease-expo: cubic-bezier(0.76, 0, 0.24, 1);
+  --gold: #c9a55c;
+  --gold-light: #dcc08a;
+  --gold-deep: #7a5c24;
+  --noir: #0b0b0b;
+  --gradient-gold: linear-gradient(
+    135deg,
+    #e6cf9c 0%,
+    #c9a55c 50%,
+    #9c7a3c 100%
+  );
 }
 
 * {
@@ -34,17 +51,18 @@
   text-rendering: optimizeLegibility;
 }
 
+/* Dark html behind the page so overscroll at the top/bottom matches the
+   nav and footer instead of flashing ivory. */
 html {
-  background: #3554ff;
+  background: var(--noir);
 }
 
 body {
   font-family: var(--font-poppins), system-ui, sans-serif;
   font-weight: 400;
-  color: var(--ink);
+  color: rgb(var(--ink));
+  background-color: rgb(var(--surface));
   overflow-x: hidden;
-  background: var(--gradient-body);
-  background-attachment: fixed;
   min-height: 100svh;
 }
 
@@ -66,9 +84,36 @@ html.lenis body {
   pointer-events: none;
 }
 
+/* Photo protection (with components/ImageGuard.tsx): no dragging,
+   selecting or iOS long-press "Save image" on any image. */
+img,
+video {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Printing / "Save as PDF" never includes the photographs. */
+@media print {
+  img,
+  picture,
+  video,
+  iframe,
+  [style*="background-image"] {
+    visibility: hidden !important;
+  }
+  body::before {
+    content: "© VB Photographe — photographs are protected and are not included when printing.";
+    display: block;
+    padding: 1rem 0;
+    font: 600 12px/1.4 system-ui, sans-serif;
+  }
+}
+
 ::selection {
-  background: #ffffff;
-  color: #3554ff;
+  background: var(--gold);
+  color: var(--noir);
 }
 
 /* Cursor — hide native on desktop-only pointer devices */
@@ -83,9 +128,15 @@ html.lenis body {
   }
 }
 
-/* Utility: keep gradient-text utility available (used over white cards) */
+/* Lining figures for the serif so phone numbers and stats sit evenly
+   (Cormorant defaults to old-style digits). */
+.font-serif {
+  font-variant-numeric: lining-nums;
+}
+
+/* Gold gradient text (kept as a utility; previously blue→purple) */
 .text-gradient {
-  background: var(--gradient-brand);
+  background: var(--gradient-gold);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -100,29 +151,133 @@ html.lenis body {
   letter-spacing: 0.15em;
 }
 
+@layer components {
+  /* Section eyebrow — gold, wide-tracked caps above a heading */
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgb(var(--accent));
+  }
+
+  /* Thin gold rule used under centred section headings */
+  .gold-rule {
+    display: block;
+    width: 3rem;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  /* Buttons — pill shaped, consistent across the site */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    border-radius: 9999px;
+    padding: 0.85rem 1.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    transition:
+      background-color 450ms var(--ease-expo),
+      color 450ms var(--ease-expo),
+      border-color 450ms var(--ease-expo),
+      box-shadow 450ms var(--ease-expo),
+      transform 450ms var(--ease-expo);
+  }
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 150ms;
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+  }
+  .btn-sm {
+    padding: 0.65rem 1.3rem;
+    font-size: 0.8rem;
+  }
+  .btn-gold {
+    background: var(--gold);
+    color: var(--noir);
+    box-shadow: 0 12px 30px -14px rgba(201, 165, 92, 0.75);
+  }
+  .btn-gold:hover:not(:disabled) {
+    background: var(--gold-light);
+    box-shadow: 0 16px 36px -14px rgba(201, 165, 92, 0.9);
+  }
+  /* Soft light sweep across gold buttons on hover */
+  .btn-gold {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-gold::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    transition: transform 900ms var(--ease-expo);
+    pointer-events: none;
+  }
+  .btn-gold:hover:not(:disabled)::after {
+    transform: translateX(120%);
+  }
+  .btn-light {
+    background: #ffffff;
+    color: var(--noir);
+  }
+  .btn-light:hover:not(:disabled) {
+    background: var(--gold-light);
+  }
+  .btn-outline {
+    background: transparent;
+    color: rgb(var(--ink));
+    border-color: rgb(var(--ink) / 0.28);
+  }
+  .btn-outline:hover:not(:disabled) {
+    background: rgb(var(--ink));
+    border-color: rgb(var(--ink));
+    color: rgb(var(--surface));
+  }
+}
+
 /*
- * Wordmark sizes used by the "vb photographe" text.
- *
- * .wordmark-xl → hero h1 (unchanged Phase 7 sizes)
- * .wordmark-md → footer wordmark (Phase 9: ~45% smaller than xl so the
- *                footer no longer dominates the screen)
+ * Wordmark sizes used by the "VB Photographe" hero heading and the
+ * footer signature.
  */
 .wordmark-xl {
-  font-size: 2.25rem;
+  font-size: 2.75rem;
 }
 @media (min-width: 640px) {
   .wordmark-xl {
-    font-size: 3.75rem;
+    font-size: 4.25rem;
   }
 }
 @media (min-width: 1024px) {
   .wordmark-xl {
-    font-size: clamp(4.5rem, 6vw, 6.5rem);
+    font-size: clamp(5rem, 6.4vw, 7rem);
   }
 }
 
 .wordmark-md {
-  font-size: 2rem;
+  font-size: 2.5rem;
 }
 @media (min-width: 640px) {
   .wordmark-md {
@@ -131,7 +286,35 @@ html.lenis body {
 }
 @media (min-width: 1024px) {
   .wordmark-md {
-    font-size: clamp(4rem, 5.5vw, 5.5rem);
+    font-size: 3.5rem;
+  }
+}
+
+/*
+ * Scroll reveal — driven by components/ScrollReveal.tsx. Only elements
+ * below the first screen ever get `reveal-pending`; they rise and fade
+ * in (or ease out of a slight zoom for photographs) as they approach.
+ * Stagger with an inline `--reveal-delay`.
+ */
+[data-reveal].reveal-pending {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  transition:
+    opacity 900ms var(--ease-expo),
+    transform 1100ms var(--ease-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal="zoom"].reveal-pending {
+  transform: scale(1.06);
+}
+[data-reveal].reveal-pending.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+@media print {
+  [data-reveal].reveal-pending {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -151,14 +334,8 @@ html.lenis body {
 
 /*
  * Respect the OS-level reduce-motion setting. Users who've asked for
- * less motion (motion sickness / battery / preference) get:
- *   - the marquee frozen
- *   - the .card image scale-on-hover disabled
- *   - the .card-tint opacity transition made instant
- *   - the reveal-mask transition made instant (Framer Motion still
- *     handles its own via useReducedMotion)
- *
- * We keep the elements visible — we only kill the movement.
+ * less motion get the marquee frozen and the card hover-scale disabled.
+ * Elements stay visible — only the movement is removed.
  */
 @media (prefers-reduced-motion: reduce) {
   .marquee-track {
@@ -171,6 +348,20 @@ html.lenis body {
   .card:hover .card-image {
     transform: none;
   }
+  .btn:hover {
+    transform: none;
+  }
+  .btn-gold::after {
+    display: none;
+  }
+}
+
+/* Fine film grain for the cinematic hero (inline SVG noise, no request) */
+.film-grain {
+  pointer-events: none;
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* Hide scrollbar for horizontal scrollers */
@@ -182,24 +373,31 @@ html.lenis body {
   -ms-overflow-style: none;
 }
 
-/* Reveal primitives */
+/* Reveal primitives. The padding keeps serif descenders (g, p, y) and
+   italic overhangs inside the mask; the negative margin cancels it so
+   line spacing is unchanged. */
 .reveal-mask {
   overflow: hidden;
   display: inline-block;
   vertical-align: bottom;
+  padding: 0 0.06em 0.12em 0;
+  margin-bottom: -0.12em;
 }
 
-/* Focus ring — visible on gradient */
+/* Focus ring — gold on both palettes */
 :focus-visible {
-  outline: 2px solid #ffffff;
+  outline: 2px solid rgb(var(--accent));
   outline-offset: 4px;
-  border-radius: 2px;
+  border-radius: 4px;
 }
 
 /* Scoped hover — used by .card class */
 .card {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+  /* Keeps rounded corners clipping the scaled image in Safari */
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 .card .card-image {
   transform: scale(1);
@@ -212,7 +410,11 @@ html.lenis body {
 .card .card-tint {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(53, 84, 255, 0.55) 100%);
+  background: linear-gradient(
+    180deg,
+    transparent 35%,
+    rgba(11, 11, 11, 0.45) 100%
+  );
   opacity: 0;
   transition: opacity 700ms var(--ease-expo);
   pointer-events: none;

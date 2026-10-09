@@ -56,20 +56,26 @@ export default async function CategoryGalleryPage({
   const isVideos = category.kind === "videos";
 
   return (
-    <section className="px-6 pb-32 pt-32 md:px-10 md:pt-40">
-      <div className="mx-auto max-w-[1600px]">
-        <p className="ui-label text-white/70">{category.label}</p>
-        <h1
-          className="mt-4 text-display font-bold lowercase tracking-display text-white"
-          style={{ lineHeight: 0.9 }}
-        >
-          {category.tagline}
-        </h1>
-        <p className="ui-label mt-6 text-white/60">
-          {count > 0
-            ? `${count} ${isVideos ? "films" : "photographs"}`
-            : "coming soon"}
-        </p>
+    <section className="px-6 pb-32 pt-36 md:px-10 md:pt-44">
+      <div className="mx-auto max-w-[1440px]">
+        <header className="mx-auto max-w-3xl text-center">
+          <p className="eyebrow">{category.label}</p>
+          <h1
+            className="mt-4 font-serif text-display-sm font-medium tracking-serif text-ink first-letter:uppercase"
+            style={{ lineHeight: 1.05 }}
+          >
+            {category.tagline}
+          </h1>
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <span aria-hidden className="gold-rule w-8" />
+            <p className="ui-label text-ink/55">
+              {count > 0
+                ? `${count} ${isVideos ? "films" : "photographs"}`
+                : "coming soon"}
+            </p>
+            <span aria-hidden className="gold-rule w-8" />
+          </div>
+        </header>
 
         <div className="mt-14 md:mt-16">
           <PhotoGrid

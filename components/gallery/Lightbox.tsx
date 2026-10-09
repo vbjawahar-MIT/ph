@@ -126,7 +126,7 @@ export default function Lightbox({ items, index, onClose, onChange }: Props) {
     <AnimatePresence>
       {open && current && (
         <motion.div
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-[#080820]/95 backdrop-blur-xl"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-[#0b0b0b]/95 backdrop-blur-xl"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -147,7 +147,7 @@ export default function Lightbox({ items, index, onClose, onChange }: Props) {
               }}
               aria-label="Close (ESC)"
               data-cursor-label="close"
-              className="ui-label rounded-full border border-white/40 px-4 py-2 transition-all duration-500 hover:scale-105 hover:border-white hover:bg-white hover:text-[#3554ff]"
+              className="ui-label rounded-full border border-white/40 px-4 py-2 transition-all duration-500 hover:scale-105 hover:border-gold hover:bg-gold hover:text-[#0b0b0b]"
             >
               close &nbsp;esc
             </button>
@@ -162,7 +162,7 @@ export default function Lightbox({ items, index, onClose, onChange }: Props) {
             }}
             aria-label="Previous (←)"
             data-cursor-label="prev"
-            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/30 bg-white/10 p-3 text-white backdrop-blur-md transition-all duration-500 hover:scale-110 hover:border-white hover:bg-white hover:text-[#3554ff] md:left-8"
+            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/30 bg-white/10 p-3 text-white backdrop-blur-md transition-all duration-500 hover:scale-110 hover:border-gold hover:bg-gold hover:text-[#0b0b0b] md:left-8"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden>
               <path d="M15 6l-6 6 6 6z" />
@@ -176,7 +176,7 @@ export default function Lightbox({ items, index, onClose, onChange }: Props) {
             }}
             aria-label="Next (→)"
             data-cursor-label="next"
-            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/30 bg-white/10 p-3 text-white backdrop-blur-md transition-all duration-500 hover:scale-110 hover:border-white hover:bg-white hover:text-[#3554ff] md:right-8"
+            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/30 bg-white/10 p-3 text-white backdrop-blur-md transition-all duration-500 hover:scale-110 hover:border-gold hover:bg-gold hover:text-[#0b0b0b] md:right-8"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden>
               <path d="M9 6l6 6-6 6z" />

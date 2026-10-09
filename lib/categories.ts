@@ -106,11 +106,10 @@ export const CATEGORIES: Category[] = [
     tagline: "the day, in motion.",
     folder: "candid-videos",
     kind: "videos",
-    // First YouTube video's thumbnail. Uses hqdefault (480x360) — a
-    // size that always exists on every YouTube video, and is plenty
-    // for the card's display area. maxresdefault is 4x the pixels
-    // for the same rendered size on mobile.
-    coverThumb: "https://i.ytimg.com/vi/FqgyJ1x1Jzg/hqdefault.jpg",
+    // Cover: the balcony couple from the second film, at YouTube's full
+    // 1280x720 size (maxresdefault) so the large collection card stays
+    // sharp. Also used by the "Candid Films" service card on /about.
+    coverThumb: "https://i.ytimg.com/vi/CXoybPeLk1Y/maxresdefault.jpg",
     youtubeVideoIds: [
       "FqgyJ1x1Jzg",
       "CXoybPeLk1Y",

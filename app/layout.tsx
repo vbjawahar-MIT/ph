@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Cormorant_Garamond, Great_Vibes, Poppins } from "next/font/google";
 import "../styles/globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import Cursor from "@/components/Cursor";
@@ -7,12 +7,31 @@ import PageTransition from "@/components/PageTransition";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import HomeIndicator from "@/components/HomeIndicator";
+import ImageGuard from "@/components/ImageGuard";
+import ScrollReveal from "@/components/ScrollReveal";
 import { SITE } from "@/lib/site-config";
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-poppins",
+  display: "swap",
+});
+
+// Display serif for headings.
+const serif = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+// Script accent — used sparingly for signatures.
+const script = Great_Vibes({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-script",
   display: "swap",
 });
 
@@ -34,15 +53,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={poppins.variable}>
+    <html
+      lang="en"
+      className={`${poppins.variable} ${serif.variable} ${script.variable}`}
+    >
       <body>
         <SmoothScroll>
           <Cursor />
           <PageTransition />
-          <Nav logoSrc={SITE.logo?.src ?? null} />
+          <Nav
+            logoSrc={SITE.logoMark?.src ?? SITE.logo?.src ?? null}
+            contact={{
+              phone: SITE.phones[0],
+              instagram: SITE.social.instagram,
+              location: SITE.location,
+            }}
+          />
           <main>{children}</main>
           <Footer />
           <HomeIndicator />
+          <ImageGuard />
+          <ScrollReveal />
         </SmoothScroll>
       </body>
     </html>

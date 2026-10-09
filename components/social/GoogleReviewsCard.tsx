@@ -27,10 +27,10 @@ export default function GoogleReviewsCard({ variant = "card" }: Props) {
         rel="noopener noreferrer"
         aria-label={label}
         data-cursor-label="review"
-        className="group inline-flex items-center gap-3 text-white transition-opacity duration-500 hover:opacity-80"
+        className="group inline-flex items-center gap-3 text-ink/75 transition-colors duration-500 hover:text-gold"
       >
         <StarRow small />
-        <span className="ui-label">leave a Google review →</span>
+        <span className="ui-label">Leave a Google review →</span>
       </a>
     );
   }
@@ -42,29 +42,27 @@ export default function GoogleReviewsCard({ variant = "card" }: Props) {
       rel="noopener noreferrer"
       aria-label={label}
       data-cursor-label="review"
-      className="group flex flex-col gap-6 rounded-sm border border-white/15 bg-white/[0.04] p-6 backdrop-blur-md transition-all duration-500 ease-expo hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/[0.08] hover:shadow-[0_20px_60px_-30px_rgba(255,255,255,0.35)] md:p-7"
+      className="group flex flex-col gap-6 rounded-2xl border border-line/10 bg-card p-6 shadow-soft transition-all duration-500 ease-expo hover:-translate-y-0.5 hover:shadow-lift md:p-8"
     >
       <div className="flex items-center gap-5">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition-transform duration-500 ease-expo group-hover:scale-110 md:h-12 md:w-12">
-          <GoogleGlyph className="h-5 w-5 md:h-6 md:w-6" />
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-accent/30 text-accent transition-transform duration-500 ease-expo group-hover:scale-110">
+          <GoogleGlyph className="h-5 w-5" />
         </div>
         <div className="flex-1">
-          <p className="ui-label text-white/60">Google Reviews</p>
+          <p className="ui-label text-ink/55">Google Reviews</p>
           <StarRow />
         </div>
       </div>
-      <div className="flex items-end justify-between gap-6">
+      <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end sm:gap-6">
         <div>
-          <p className="text-lg font-bold lowercase tracking-display text-white md:text-xl">
-            share your experience
+          <p className="font-serif text-xl text-ink md:text-2xl">
+            Share your experience
           </p>
-          <p className="mt-1 text-sm text-white/70">
-            a few words from you helps future couples find us.
+          <p className="mt-1 text-sm text-ink/65">
+            A few words from you helps future couples find us.
           </p>
         </div>
-        <span className="ui-label shrink-0 whitespace-nowrap rounded-full border border-white/40 px-4 py-2 text-white transition-all duration-500 group-hover:scale-105 group-hover:border-white group-hover:bg-white group-hover:text-[#3554ff]">
-          leave a review
-        </span>
+        <span className="btn btn-gold btn-sm shrink-0">Leave a review</span>
       </div>
     </a>
   );
@@ -73,7 +71,7 @@ export default function GoogleReviewsCard({ variant = "card" }: Props) {
 function StarRow({ small = false }: { small?: boolean }) {
   const size = small ? "h-3.5 w-3.5" : "h-4 w-4 md:h-5 md:w-5";
   return (
-    <div className="mt-2 flex items-center gap-1 text-white" aria-label="5 out of 5">
+    <div className="mt-2 flex items-center gap-1 text-gold" aria-label="5 out of 5">
       {Array.from({ length: 5 }).map((_, i) => (
         <svg key={i} viewBox="0 0 24 24" className={`${size} fill-current`} aria-hidden>
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />

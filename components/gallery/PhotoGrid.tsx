@@ -42,13 +42,12 @@ const SIZES = {
 } as const;
 
 /**
- * Brand-tone placeholder. Zero-byte "blur" — a CSS gradient sits
- * behind each tile so visitors see something brand-consistent
- * immediately, and the photograph covers it on decode. No extra
- * HTTP request, no base64 payload.
+ * Warm neutral placeholder. Zero-byte "blur" — a CSS gradient sits
+ * behind each tile so visitors see a calm tone immediately, and the
+ * photograph covers it on decode. No extra HTTP request, no base64.
  */
 const PLACEHOLDER_BG =
-  "linear-gradient(135deg, #3554ff 0%, #6b4eff 50%, #a14dff 100%)";
+  "linear-gradient(135deg, #ECE5D8 0%, #E2D7C5 100%)";
 
 type TileProps = {
   item: MediaItem;
@@ -98,7 +97,7 @@ const Tile = memo(function Tile({
           ? `Play video ${index + 1}`
           : `Open photo ${index + 1}`
       }
-      className="group relative block w-full overflow-hidden rounded-sm shadow-[0_20px_60px_-30px_rgba(10,10,26,0.5)] transition-all duration-700 ease-expo"
+      className="group relative block w-full overflow-hidden rounded-lg shadow-soft transition-all duration-700 ease-expo hover:shadow-lift"
       style={{
         filter: isDimmed
           ? "brightness(0.72) saturate(0.75) blur(1px)"
@@ -117,7 +116,8 @@ const Tile = memo(function Tile({
           <VideoThumbnail src={item.src} />
         ) : (
           <ProtectedImage
-            src={item.src}
+            // Lightweight thumbnail in the grid; the lightbox opens item.src.
+            src={item.thumb ?? item.src}
             alt=""
             fill
             sizes={SIZES[columns]}
@@ -125,7 +125,7 @@ const Tile = memo(function Tile({
             priority={loadStrategy === "priority"}
             loading={loadStrategy === "lazy" ? "lazy" : "eager"}
             fetchPriority={loadStrategy === "priority" ? "high" : "auto"}
-            className="h-full w-full"
+            className="h-full w-full object-cover object-[50%_35%]"
           />
         )}
         {/* Focussed brighten overlay */}
@@ -179,7 +179,7 @@ export default function PhotoGrid({
 
   if (items.length === 0) {
     return (
-      <p className="ui-label text-white/60">
+      <p className="ui-label text-ink/55">
         No files yet — drop images into the folder and they will appear here.
       </p>
     );
@@ -199,17 +199,22 @@ export default function PhotoGrid({
                 ? "eager"
                 : "lazy";
           return (
-            <Tile
+            <div
               key={item.src}
-              item={item}
-              index={i}
-              columns={columns}
-              loadStrategy={loadStrategy}
-              isDimmed={hovered !== null && hovered !== i}
-              isHovered={hovered === i}
-              onEnter={handleEnter}
-              onOpen={handleOpen}
-            />
+              data-reveal
+              style={{ "--reveal-delay": `${(i % columns) * 80}ms` } as React.CSSProperties}
+            >
+              <Tile
+                item={item}
+                index={i}
+                columns={columns}
+                loadStrategy={loadStrategy}
+                isDimmed={hovered !== null && hovered !== i}
+                isHovered={hovered === i}
+                onEnter={handleEnter}
+                onOpen={handleOpen}
+              />
+            </div>
           );
         })}
       </div>

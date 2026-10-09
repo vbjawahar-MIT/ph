@@ -96,7 +96,8 @@ function collectUrls(slugs: string[], count: number): string[] {
     const g = getGalleryFor(slug);
     if (!g) continue;
     for (const item of g.items.slice(0, count)) {
-      if (item.kind === "image") urls.push(item.src);
+      // Warm what the grid will actually show (thumbnail when built).
+      if (item.kind === "image") urls.push(item.thumb ?? item.src);
     }
   }
   return urls;

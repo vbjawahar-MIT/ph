@@ -34,6 +34,7 @@
 
 import manifest from "./asset-manifest.json";
 import hostedImages from "./hosted-images.json";
+import galleryThumbs from "./gallery-thumbs.json";
 import {
   CATEGORIES,
   getCategoryBySlug,
@@ -42,6 +43,16 @@ import {
 } from "./categories";
 
 const HOSTED: Record<string, string> = hostedImages as Record<string, string>;
+
+/**
+ * Small WebP thumbnails + true dimensions of the hosted photographs,
+ * built by `node scripts/build-thumbs.mjs` into public/thumbs/. Grids
+ * show the thumbnail; the lightbox still opens the full original.
+ */
+const THUMBS = galleryThumbs as Record<
+  string,
+  { url: string; w: number; h: number }
+>;
 
 export type MediaKind = "image" | "video";
 
@@ -53,6 +64,11 @@ export type MediaItem = {
   kind: MediaKind;
   /** Filename without extension — used as an alt-text fallback. */
   name: string;
+  /** ~800px WebP for grid tiles, when one has been built. */
+  thumb?: string;
+  /** Pixel size of the photograph (aspect ratio for layout). */
+  width?: number;
+  height?: number;
 };
 
 export type CategorySummary = {
@@ -107,6 +123,14 @@ function hostedUrlForFile(file: string): string | null {
   return HOSTED[number] ?? null;
 }
 
+/** Thumbnail for a hosted file — only when it was built from that URL. */
+function thumbForFile(file: string) {
+  const match = NUMERIC_PREFIX_RE.exec(file);
+  const entry = match ? THUMBS[match[1]] : undefined;
+  if (!entry || entry.url !== HOSTED[match![1]]) return null;
+  return { thumb: `/thumbs/${match![1]}.webp`, width: entry.w, height: entry.h };
+}
+
 function buildSrc(folder: string, file: string): string {
   const hosted = hostedUrlForFile(file);
   if (hosted) return hosted;
@@ -125,6 +149,7 @@ function fileToMedia(folder: string, file: string): MediaItem | null {
     file,
     kind: isVideo ? "video" : "image",
     name: file.replace(/\.[^.]+$/, ""),
+    ...(isImage ? thumbForFile(file) : null),
   };
 }
 

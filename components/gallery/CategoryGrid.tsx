@@ -18,12 +18,17 @@ export default function CategoryGrid({ categories, priorityCount = 0 }: Props) {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3 lg:gap-10">
       {categories.map((c, i) => (
-        <CategoryCard
+        <div
           key={c.category.slug}
-          summary={c}
-          priority={i < priorityCount}
-          sizes={SIZES}
-        />
+          data-reveal
+          style={{ "--reveal-delay": `${(i % 3) * 90}ms` } as React.CSSProperties}
+        >
+          <CategoryCard
+            summary={c}
+            priority={i < priorityCount}
+            sizes={SIZES}
+          />
+        </div>
       ))}
     </div>
   );

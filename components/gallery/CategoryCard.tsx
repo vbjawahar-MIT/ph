@@ -15,8 +15,8 @@ type Props = {
  * A single category tile used on /work and the home Featured section.
  * Cover comes from `cover.jpg` in the folder if present, otherwise the
  * first natural-sorted file. Empty categories still render — with a
- * subtle "coming soon" state — so a placeholder gallery like
- * Traditional still has a card and appears on the archive index.
+ * "Coming soon" state — so a placeholder gallery like Traditional still
+ * has a card and appears on the archive index.
  */
 export default function CategoryCard({ summary, priority, sizes }: Props) {
   const { category, cover, count } = summary;
@@ -29,6 +29,14 @@ export default function CategoryCard({ summary, priority, sizes }: Props) {
   //      for Candid Videos whose media lives off-server)
   //   3. Fall back to the "Coming soon" placeholder tile
   const overrideCoverSrc = !cover ? category.coverThumb : null;
+  const imageSizes =
+    sizes ?? "(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw";
+
+  const total = category.youtubeVideoIds?.length ?? count;
+  const countLabel =
+    total === 0
+      ? null
+      : `${total} ${category.kind === "videos" ? "films" : "photos"}`;
 
   return (
     <Link
@@ -39,20 +47,20 @@ export default function CategoryCard({ summary, priority, sizes }: Props) {
       }`}
       className="group block"
     >
-      <div className="card relative overflow-hidden rounded-sm shadow-[0_20px_60px_-30px_rgba(10,10,26,0.5)] transition-shadow duration-700 ease-expo group-hover:shadow-[0_30px_80px_-25px_rgba(10,10,26,0.7)]">
-        <div className="aspect-[4/5] w-full">
+      <div className="card rounded-xl bg-noir shadow-soft transition-shadow duration-700 ease-expo group-hover:shadow-lift">
+        <div className="relative aspect-[4/5] w-full">
           {cover ? (
             cover.kind === "video" ? (
               <VideoThumbnail src={cover.src} className="card-image" />
             ) : (
               <ProtectedImage
-                src={cover.src}
+                src={cover.thumb ?? cover.src}
                 alt=""
                 fill
                 priority={priority}
-                sizes={sizes ?? "(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw"}
+                sizes={imageSizes}
                 quality={85}
-                className="card-image h-full w-full"
+                className="card-image h-full w-full object-cover"
               />
             )
           ) : overrideCoverSrc ? (
@@ -61,32 +69,43 @@ export default function CategoryCard({ summary, priority, sizes }: Props) {
               alt=""
               fill
               priority={priority}
-              sizes={sizes ?? "(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw"}
+              sizes={imageSizes}
               quality={85}
-              className="card-image h-full w-full"
+              className="card-image h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-white/5">
-              <p className="ui-label text-white/60">Coming soon</p>
+            <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-[radial-gradient(circle_at_50%_40%,#1f1b14_0%,#0b0b0b_70%)]">
+              <span aria-hidden className="gold-rule" />
+              <p className="ui-label text-gold">Coming soon</p>
             </div>
           )}
         </div>
+
         <div className="card-tint" aria-hidden />
+
+        {/* Title over a permanent bottom fade */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 via-black/25 to-transparent"
+        />
+        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 md:p-6">
+          <h3
+            className="font-serif text-2xl font-medium tracking-serif text-white transition-transform duration-500 ease-expo group-hover:-translate-y-0.5 md:text-[1.75rem]"
+            style={{ lineHeight: 1.1 }}
+          >
+            {label}
+          </h3>
+          {countLabel && (
+            <span className="ui-label shrink-0 pb-1 text-white/75">
+              {countLabel}
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="mt-5 flex items-baseline justify-between gap-4">
-        <h3 className="text-xl font-bold lowercase tracking-display text-white transition-transform duration-500 ease-expo group-hover:-translate-y-0.5 md:text-2xl">
-          {label.toLowerCase()}
-        </h3>
-        <span className="ui-label shrink-0 text-white/60">
-          {(() => {
-            const total = category.youtubeVideoIds?.length ?? count;
-            if (total === 0) return "coming soon";
-            return `${total} ${category.kind === "videos" ? "films" : "photos"}`;
-          })()}
-        </span>
-      </div>
-      <p className="ui-label mt-2 text-white/60">{category.tagline}</p>
+      <p className="mt-4 text-sm text-ink/60 first-letter:uppercase">
+        {category.tagline}
+      </p>
     </Link>
   );
 }

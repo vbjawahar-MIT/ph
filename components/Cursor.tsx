@@ -102,7 +102,7 @@ export default function Cursor() {
     >
       {/* The dot — small, subtle, never grows past its own base size. */}
       <motion.div
-        className="absolute left-0 top-0 h-2 w-2 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.6)]"
+        className="absolute left-0 top-0 h-2 w-2 rounded-full bg-gold shadow-[0_0_0_1px_rgba(11,11,11,0.25),0_0_14px_rgba(201,165,92,0.55)]"
         style={{
           translateX: springX,
           translateY: springY,
@@ -119,7 +119,7 @@ export default function Cursor() {
       {/* Offset label pill — appears next to the cursor when hovering
           something with data-cursor-label. Never covers the target. */}
       <motion.div
-        className="absolute left-0 top-0 whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-ui text-[#3554ff] shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+        className="absolute left-0 top-0 whitespace-nowrap rounded-full bg-noir px-2.5 py-1 text-[10px] font-semibold uppercase tracking-ui text-gold shadow-[0_10px_30px_rgba(0,0,0,0.25)] ring-1 ring-gold/40"
         style={{
           translateX: springX,
           translateY: springY,

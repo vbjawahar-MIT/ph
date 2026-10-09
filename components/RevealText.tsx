@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, ReactNode } from "react";
+import { Fragment, useRef, ReactNode } from "react";
 
 type Props = {
   children: string;
@@ -61,15 +61,16 @@ export default function RevealText({
       className="inline"
     >
       {chunks.map((chunk, i) => (
-        <span
-          key={i}
-          className="reveal-mask"
-          style={{ marginRight: splitBy === "word" ? "0.25em" : 0 }}
-        >
-          <motion.span variants={item} className="inline-block">
-            {chunk}
-          </motion.span>
-        </span>
+        <Fragment key={i}>
+          <span className="reveal-mask">
+            <motion.span variants={item} className="inline-block">
+              {chunk}
+            </motion.span>
+          </span>
+          {/* Real space between words so screen readers and search
+              engines read "hold their breath", not "holdtheirbreath". */}
+          {splitBy === "word" && i < chunks.length - 1 ? " " : null}
+        </Fragment>
       ))}
     </motion.span>
   );

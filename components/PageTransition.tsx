@@ -7,7 +7,10 @@ export default function PageTransition() {
   const pathname = usePathname();
 
   return (
-    <AnimatePresence mode="wait">
+    // initial={false}: no curtain on the very first page load (content and
+    // the hero entrance are visible immediately); it still wipes on every
+    // route change.
+    <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={pathname}
         aria-hidden
@@ -19,7 +22,7 @@ export default function PageTransition() {
           duration: 0.8,
           ease: [0.76, 0, 0.24, 1],
         }}
-        style={{ background: "#ffffff" }}
+        style={{ background: "#F7F4EE" }}
       />
     </AnimatePresence>
   );
