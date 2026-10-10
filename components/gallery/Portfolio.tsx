@@ -403,7 +403,7 @@ export default function Portfolio({ photos, filters, collections, films }: Props
 
         {/* Link through to the full collection page */}
         {single && collections[single] && shown.length > 0 && (
-          <p className="mt-14 text-center">
+          <p className="stack text-center">
             <Link
               href={`/work/${single}`}
               data-cursor-label="open"

@@ -13,6 +13,8 @@
  *
  * Thumbnails are built from the HOSTED file — the one the site actually
  * shows — not the local copy in public/assets, which can differ.
+ * Self-hosted photos (lib/self-hosted-images.json, paths like
+ * /photos/traditional/221.jpg) are read straight from public/.
  * The lightbox keeps opening the full-resolution original.
  */
 
@@ -22,6 +24,7 @@ import sharp from "sharp";
 
 const ROOT = process.cwd();
 const HOSTED_PATH = path.join(ROOT, "lib/hosted-images.json");
+const SELF_HOSTED_PATH = path.join(ROOT, "lib/self-hosted-images.json");
 const MANIFEST_PATH = path.join(ROOT, "lib/gallery-thumbs.json");
 const OUT_DIR = path.join(ROOT, "public/thumbs");
 
@@ -30,7 +33,10 @@ const QUALITY = 72;
 const CONCURRENCY = 6;
 const force = process.argv.includes("--force");
 
-const hosted = JSON.parse(await fs.readFile(HOSTED_PATH, "utf8"));
+const hosted = {
+  ...JSON.parse(await fs.readFile(HOSTED_PATH, "utf8")),
+  ...JSON.parse(await fs.readFile(SELF_HOSTED_PATH, "utf8")),
+};
 let previous = {};
 try {
   previous = JSON.parse(await fs.readFile(MANIFEST_PATH, "utf8"));
@@ -63,9 +69,14 @@ async function worker() {
       continue;
     }
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`#${num}: HTTP ${res.status} for ${url}`);
-    const original = Buffer.from(await res.arrayBuffer());
+    let original;
+    if (url.startsWith("/")) {
+      original = await fs.readFile(path.join(ROOT, "public", url));
+    } else {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`#${num}: HTTP ${res.status} for ${url}`);
+      original = Buffer.from(await res.arrayBuffer());
+    }
 
     const { data, info } = await sharp(original)
       .rotate() // honour EXIF orientation

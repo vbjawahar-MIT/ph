@@ -70,7 +70,7 @@ export default function WorkPage() {
   }).filter((p) => p !== null);
 
   return (
-    <section className="px-6 pb-32 pt-36 md:px-10 md:pt-44">
+    <section className="section-top section-bottom px-6 md:px-10">
       <div className="mx-auto max-w-[1440px]">
         {/* COLLECTIONS — first thing on the page */}
         <header className="text-center">
@@ -81,9 +81,9 @@ export default function WorkPage() {
           >
             Explore by <em className="italic text-accent">occasion.</em>
           </h1>
-          <span aria-hidden className="gold-rule mx-auto mt-6" />
+          <span aria-hidden className="gold-ornament mt-6"><span /></span>
         </header>
-        <div className="mt-12 md:mt-16">
+        <div className="stack">
           <CategoryGrid categories={summaries} priorityCount={3} />
         </div>
 
@@ -93,7 +93,7 @@ export default function WorkPage() {
           data-reveal
           data-cursor-label="open"
           aria-label={`View all ${photoCount} photographs`}
-          className="theme-dark group relative mt-24 grid overflow-hidden rounded-[28px] bg-noir shadow-lift ring-1 ring-gold/20 transition-shadow duration-700 ease-expo hover:shadow-[0_40px_80px_-30px_rgba(24,21,18,0.55)] md:mt-32 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
+          className="theme-dark group relative stack-lg grid overflow-hidden rounded-[28px] bg-noir shadow-lift ring-1 ring-gold/20 transition-shadow duration-700 ease-expo hover:shadow-[0_40px_80px_-30px_rgba(24,21,18,0.55)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
         >
           {/* Warm glow + fine grain */}
           <div

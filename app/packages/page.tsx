@@ -40,14 +40,14 @@ export default function PackagesPage() {
   return (
     <>
       {/* HERO — copy beside the photograph carousel */}
-      <section className="relative isolate overflow-hidden bg-surface px-6 pb-20 pt-28 md:px-10 md:pt-36 lg:pb-28 lg:pt-40">
+      <section className="section-top section-bottom relative isolate overflow-hidden bg-surface px-6 md:px-10">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-40 top-10 h-[480px] w-[480px] rounded-full bg-gold/10 blur-3xl"
         />
         <Sprig className="pointer-events-none absolute -left-12 bottom-6 hidden h-60 w-auto -rotate-12 text-gold/50 lg:block" />
 
-        <div className="relative mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-12 lg:gap-14">
+        <div className="relative mx-auto grid max-w-[1440px] items-center gap-[40px] lg:grid-cols-12 lg:gap-[56px]">
           <div className="order-2 lg:order-1 lg:col-span-5">
             <p className="eyebrow">
               Your story <span className="mx-2 text-gold">•</span> Our passion
@@ -93,7 +93,7 @@ export default function PackagesPage() {
         <section
           key={group.id}
           id={group.id}
-          className={`relative scroll-mt-16 overflow-hidden px-6 py-20 md:px-10 md:py-28 ${
+          className={`section-y relative scroll-mt-16 overflow-hidden px-6 md:px-10 ${
             i % 2 === 1 ? "bg-surface-alt" : ""
           }`}
         >
@@ -107,7 +107,7 @@ export default function PackagesPage() {
           <div className="relative mx-auto max-w-[1800px]">
             <GroupHeader group={group} />
             {/* Cards per row follow the text size (see .pkg-grid). */}
-            <div className="pkg-grid mt-12 md:mt-14">
+            <div className="pkg-grid stack">
               <div className="pkg-row">
                 {group.packages.map((pkg, n) => (
                   <div
@@ -131,7 +131,7 @@ export default function PackagesPage() {
       ))}
 
       {/* CLOSING — help choosing */}
-      <section className="px-6 py-20 md:px-10 md:py-24">
+      <section className="section-y px-6 md:px-10">
         <div data-reveal className="mx-auto flex max-w-[1440px] flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl">
             <p className="eyebrow">Not sure which to choose?</p>

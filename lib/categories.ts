@@ -36,6 +36,11 @@ export type Category = {
    */
   coverThumb?: string;
   /**
+   * Optional hand-picked cover (e.g. a high-resolution 4:5 crop) shown on
+   * the /work + Home cards in place of the collection's first photo.
+   */
+  coverImage?: string;
+  /**
    * Optional list of YouTube video IDs. When present the category
    * skips the filesystem gallery and its dedicated page renders these
    * as click-to-load YouTube embeds.
@@ -99,6 +104,8 @@ export const CATEGORIES: Category[] = [
     tagline: "ritual, held close.",
     folder: "traditional",
     kind: "images",
+    // Garland exchange (photo 245), cropped from the 8192px original.
+    coverImage: "/photos/traditional/cover-245.webp",
   },
   {
     slug: "candid-videos",
@@ -118,6 +125,22 @@ export const CATEGORIES: Category[] = [
       "bBkFn5TO7QY",
     ] as const,
   },
+];
+
+/**
+ * Order of the collection cards on Home ("Featured Stories") and /work.
+ * CATEGORIES keeps its own order, which /work/all uses for the photos.
+ */
+export const COLLECTION_ORDER = [
+  "traditional",
+  "candid-videos",
+  "bridal-portraits",
+  "groom-portraits",
+  "couple-portrait",
+  "pre-wedding",
+  "baby-shoot",
+  "baby-shower",
+  "puberty",
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {

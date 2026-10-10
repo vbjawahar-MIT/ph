@@ -33,7 +33,7 @@ const MILESTONES = [
   },
   {
     when: "Today",
-    text: "A trusted name for 100+ happy clients and their families.",
+    text: "A trusted name for 50+ happy clients and their families.",
   },
 ];
 
@@ -53,12 +53,12 @@ export default function AboutPage() {
   return (
     <>
       {/* INTRO — the photographer */}
-      <section className="relative overflow-hidden px-6 pb-24 pt-32 md:px-10 md:pb-32 md:pt-44">
+      <section className="relative overflow-hidden section-top section-bottom px-6 md:px-10">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-40 top-16 h-[460px] w-[460px] rounded-full bg-gold/10 blur-3xl"
         />
-        <div className="relative mx-auto grid max-w-[1440px] items-center gap-16 md:grid-cols-12 md:gap-12 lg:gap-16">
+        <div className="relative mx-auto grid max-w-[1440px] items-center gap-[40px] md:grid-cols-12 md:gap-[48px] lg:gap-[64px]">
           <div className="md:col-span-5">
             <div className="relative mx-auto max-w-md md:max-w-none">
               {/* Offset gold frame behind the portrait */}
@@ -130,7 +130,7 @@ export default function AboutPage() {
       </section>
 
       {/* STATS */}
-      <section className="bg-surface-alt px-6 py-24 md:px-10 md:py-28">
+      <section className="section-y bg-surface-alt px-6 md:px-10">
         <div className="mx-auto max-w-[1440px]">
           <header data-reveal className="mx-auto max-w-2xl text-center">
             <p className="eyebrow">By the numbers</p>
@@ -142,15 +142,15 @@ export default function AboutPage() {
             </h2>
             <span aria-hidden className="gold-rule mx-auto mt-6" />
           </header>
-          <div className="mt-14 md:mt-16">
+          <div className="stack">
             <StatsRow />
           </div>
         </div>
       </section>
 
       {/* STORY */}
-      <section className="overflow-hidden px-6 py-24 md:px-10 md:py-32">
-        <div className="mx-auto grid max-w-[1440px] items-center gap-16 md:grid-cols-12 md:gap-12 lg:gap-20">
+      <section className="section-y overflow-hidden px-6 md:px-10">
+        <div className="mx-auto grid max-w-[1440px] items-center gap-[40px] md:grid-cols-12 md:gap-[48px] lg:gap-[72px]">
           <div className="relative pb-12 md:col-span-6 md:pb-16 lg:col-span-5">
             <div data-reveal="zoom" className="relative aspect-[4/5] w-[82%] overflow-hidden rounded-2xl bg-surface-alt shadow-lift">
               {storyMain && (
@@ -239,7 +239,7 @@ export default function AboutPage() {
       {/* SERVICES — the nav's "Services" link scrolls here */}
       <section
         id="services"
-        className="scroll-mt-20 bg-surface-alt px-6 py-24 md:px-10 md:py-32"
+        className="section-y scroll-mt-20 bg-surface-alt px-6 md:px-10"
       >
         <div className="mx-auto max-w-[1440px]">
           <header data-reveal className="mx-auto max-w-2xl text-center">
@@ -257,7 +257,7 @@ export default function AboutPage() {
             </p>
           </header>
 
-          <ul className="mt-14 grid grid-cols-2 gap-3 sm:gap-5 md:mt-16 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4 xl:gap-7">
+          <ul className="stack grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4 xl:gap-7">
             {SERVICES.map((s, i) => (
               <li
                 key={s.id}
@@ -277,7 +277,7 @@ export default function AboutPage() {
             ))}
           </ul>
 
-          <div data-reveal className="mt-14 flex flex-col items-center gap-6 text-center md:mt-16">
+          <div data-reveal className="stack flex flex-col items-center gap-6 text-center">
             <p className="font-serif text-2xl text-ink/80 md:text-3xl">
               …and <em className="italic text-accent">all special occasions.</em>
             </p>
@@ -294,8 +294,8 @@ export default function AboutPage() {
       </section>
 
       {/* PHILOSOPHY */}
-      <section className="theme-dark bg-noir px-6 py-24 md:px-10 md:py-32">
-        <div data-reveal className="mx-auto grid max-w-[1440px] gap-14 md:grid-cols-12">
+      <section className="section-y theme-dark bg-noir px-6 md:px-10">
+        <div data-reveal className="mx-auto grid max-w-[1440px] gap-[40px] md:grid-cols-12 md:gap-[56px]">
           <div className="md:col-span-4">
             <p className="eyebrow">Our philosophy</p>
             <h2
@@ -335,8 +335,8 @@ export default function AboutPage() {
       </section>
 
       {/* CLOSING — call to action */}
-      <section className="px-6 py-24 md:px-10 md:py-32">
-        <div data-reveal className="relative mx-auto max-w-[1200px] overflow-hidden rounded-3xl border border-line/10 bg-card px-6 py-16 text-center shadow-soft md:px-16 md:py-20">
+      <section className="section-y px-6 md:px-10">
+        <div data-reveal className="relative mx-auto max-w-[1200px] overflow-hidden rounded-3xl border border-line/10 bg-card px-6 py-[48px] text-center shadow-soft md:px-16 md:py-[64px]">
           <div
             aria-hidden
             className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-gold/10 blur-3xl"

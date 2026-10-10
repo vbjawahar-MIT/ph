@@ -7,9 +7,9 @@ type IconName = "camera" | "heart" | "rings" | "spark";
 
 const STATS: { value: string; label: string; icon: IconName }[] = [
   { value: "10+", label: "Years experience", icon: "camera" },
-  { value: "100+", label: "Happy clients", icon: "heart" },
-  { value: "100+", label: "Weddings covered", icon: "rings" },
-  { value: "100+", label: "Events completed", icon: "spark" },
+  { value: "50+", label: "Happy clients", icon: "heart" },
+  { value: "50+", label: "Weddings covered", icon: "rings" },
+  { value: "50+", label: "Events completed", icon: "spark" },
 ];
 
 export default function StatsRow() {

@@ -24,11 +24,13 @@ export default function CategoryCard({ summary, priority, sizes }: Props) {
   const href = `/work/${category.slug}`;
 
   // Resolve the cover in preference order:
-  //   1. Filesystem cover (from public/assets/<folder>/) if any
-  //   2. Explicit `coverThumb` on the category (e.g. YouTube thumbnail
+  //   1. Hand-picked `coverImage` on the category (high-resolution crop)
+  //   2. Filesystem cover (from public/assets/<folder>/) if any
+  //   3. Explicit `coverThumb` on the category (e.g. YouTube thumbnail
   //      for Candid Videos whose media lives off-server)
-  //   3. Fall back to the "Coming soon" placeholder tile
-  const overrideCoverSrc = !cover ? category.coverThumb : null;
+  //   4. Fall back to the "Coming soon" placeholder tile
+  const overrideCoverSrc =
+    category.coverImage ?? (!cover ? category.coverThumb : null);
   const imageSizes =
     sizes ?? "(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw";
 
@@ -47,9 +49,9 @@ export default function CategoryCard({ summary, priority, sizes }: Props) {
       }`}
       className="group block"
     >
-      <div className="card rounded-xl bg-noir shadow-soft transition-shadow duration-700 ease-expo group-hover:shadow-lift">
-        <div className="relative aspect-[4/5] w-full">
-          {cover ? (
+      <div className="card rounded-xl bg-noir shadow-soft transition-shadow duration-700 ease-expo [container-type:inline-size] group-hover:shadow-lift">
+        <div className="relative aspect-[6/7] w-full">
+          {cover && !category.coverImage ? (
             cover.kind === "video" ? (
               <VideoThumbnail src={cover.src} className="card-image" />
             ) : (
@@ -88,22 +90,21 @@ export default function CategoryCard({ summary, priority, sizes }: Props) {
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 via-black/25 to-transparent"
         />
-        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 md:p-6">
+        {/* Title on one line (sized to the card's width), count beneath */}
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-start p-5 transition-transform duration-500 ease-expo group-hover:-translate-y-0.5 md:p-6">
           <h3
-            className="font-serif text-2xl font-medium tracking-serif text-white transition-transform duration-500 ease-expo group-hover:-translate-y-0.5 md:text-[1.75rem]"
+            className="max-w-full truncate font-serif text-[clamp(22px,10cqi,40px)] font-medium tracking-serif text-white"
             style={{ lineHeight: 1.1 }}
           >
             {label}
           </h3>
           {countLabel && (
-            <span className="ui-label shrink-0 pb-1 text-white/75">
-              {countLabel}
-            </span>
+            <span className="ui-label mt-[8px] text-white/80">{countLabel}</span>
           )}
         </div>
       </div>
 
-      <p className="mt-4 text-sm text-ink/60 first-letter:uppercase">
+      <p className="mt-3 font-serif text-[1.08rem] leading-snug text-ink/65 first-letter:uppercase">
         {category.tagline}
       </p>
     </Link>

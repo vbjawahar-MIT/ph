@@ -32,6 +32,37 @@
 }
 
 /*
+ * Vertical rhythm. Gaps between and inside sections are in px that ease
+ * with the screen width — not rem — so a browser set to larger text
+ * gets bigger text without the empty space between sections ballooning
+ * along with it.
+ *   .section-y       top + bottom padding of a regular section
+ *   .section-top     first section under the fixed navbar (clears it)
+ *   .section-bottom  bottom padding where only the bottom is needed
+ *   .stack / .stack-b  heading → content gap (margin-top / -bottom)
+ *   .stack-lg        a larger break between two blocks in one section
+ */
+.section-y {
+  padding-top: clamp(56px, 3vw + 40px, 88px);
+  padding-bottom: clamp(56px, 3vw + 40px, 88px);
+}
+.section-top {
+  padding-top: clamp(112px, 5vw + 72px, 148px);
+}
+.section-bottom {
+  padding-bottom: clamp(56px, 3vw + 40px, 88px);
+}
+.stack {
+  margin-top: clamp(28px, 1.5vw + 20px, 44px);
+}
+.stack-b {
+  margin-bottom: clamp(28px, 1.5vw + 20px, 44px);
+}
+.stack-lg {
+  margin-top: clamp(48px, 3vw + 32px, 72px);
+}
+
+/*
  * Jewel-tone silk themes for the top package tiers (emerald, ruby).
  * Tokens flip like .theme-dark, so text, ticks and chips follow; the
  * background layers a warm gold glow and a faint brocade dot over a
@@ -396,6 +427,28 @@ video {
     width: 3rem;
     height: 1px;
     background: var(--gold);
+  }
+
+  /* Centred ornament: gold line · small diamond · gold line.
+     Markup: <span class="gold-ornament"><span /></span> */
+  .gold-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .gold-ornament::before,
+  .gold-ornament::after {
+    content: "";
+    width: 56px;
+    height: 1px;
+    background: var(--gold);
+  }
+  .gold-ornament > span {
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--gold);
+    transform: rotate(45deg);
   }
 
   /* Buttons — pill shaped, consistent across the site */

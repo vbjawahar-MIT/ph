@@ -56,7 +56,7 @@ export default async function CategoryGalleryPage({
   const isVideos = category.kind === "videos";
 
   return (
-    <section className="px-6 pb-32 pt-36 md:px-10 md:pt-44">
+    <section className="section-top section-bottom px-6 md:px-10">
       <div className="mx-auto max-w-[1440px]">
         <header className="mx-auto max-w-3xl text-center">
           <p className="eyebrow">{category.label}</p>
@@ -77,7 +77,7 @@ export default async function CategoryGalleryPage({
           </div>
         </header>
 
-        <div className="mt-14 md:mt-16">
+        <div className="stack">
           <PhotoGrid
             items={items}
             columns={isVideos ? 2 : 3}

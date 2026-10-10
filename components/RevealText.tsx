@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { Fragment, useRef, ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, ReactNode } from "react";
 
 type Props = {
   children: string;
@@ -9,12 +9,16 @@ type Props = {
   className?: string;
   splitBy?: "word" | "line";
   delay?: number;
+  /** Play only the first time; by default it replays on every return. */
   once?: boolean;
 };
 
 /**
  * Splits text into masked chunks that translate upward into view.
  * Each word (or line) rises from below its own overflow-hidden mask.
+ * The reveal replays whenever the text comes back on screen (scrolling
+ * down or up); it only resets once the text is fully off screen, so the
+ * words never drop away while they're being read.
  */
 export default function RevealText({
   children,
@@ -22,10 +26,16 @@ export default function RevealText({
   className,
   splitBy = "word",
   delay = 0,
-  once = true,
+  once = false,
 }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const inView = useInView(ref, { once, margin: "-10% 0px -10% 0px" });
+  const entering = useInView(ref, { margin: "-10% 0px -10% 0px" });
+  const onScreen = useInView(ref);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (entering) setShown(true);
+    else if (!onScreen && !once) setShown(false);
+  }, [entering, onScreen, once]);
 
   // Defensive: caller may pass a non-string (JSX) child. If so, render it plain.
   if (typeof children !== "string") {
@@ -57,7 +67,7 @@ export default function RevealText({
       ref={ref}
       variants={container}
       initial="hidden"
-      animate={inView ? "show" : "hidden"}
+      animate={shown ? "show" : "hidden"}
       className="inline"
     >
       {chunks.map((chunk, i) => (

@@ -34,15 +34,27 @@
 
 import manifest from "./asset-manifest.json";
 import hostedImages from "./hosted-images.json";
+import selfHostedImages from "./self-hosted-images.json";
 import galleryThumbs from "./gallery-thumbs.json";
 import {
   CATEGORIES,
+  COLLECTION_ORDER,
   getCategoryBySlug,
   type Category,
   type CategoryKind,
 } from "./categories";
 
-const HOSTED: Record<string, string> = hostedImages as Record<string, string>;
+/**
+ * Photo number → URL. Most photographs are on the photo host
+ * (hosted-images.json, rebuilt by scripts/fetch-hosted-images.mjs);
+ * self-hosted-images.json lists web-size copies committed under
+ * public/photos/ (e.g. the Traditional collection, numbers 221+) that
+ * the site serves itself.
+ */
+const HOSTED: Record<string, string> = {
+  ...(hostedImages as Record<string, string>),
+  ...(selfHostedImages as Record<string, string>),
+};
 
 /**
  * Small WebP thumbnails + true dimensions of the hosted photographs,
@@ -193,9 +205,21 @@ export function getGalleryFor(slug: string): CategorySummary | null {
   };
 }
 
-/** Every category with its cover + count — for /work index + home grid. */
+/** Position in COLLECTION_ORDER; unlisted categories go last. */
+const displayRank = (slug: string) => {
+  const i = COLLECTION_ORDER.indexOf(slug);
+  return i === -1 ? COLLECTION_ORDER.length : i;
+};
+
+/**
+ * Every category with its cover + count — for /work index + home grid,
+ * in COLLECTION_ORDER.
+ */
 export function getAllCategorySummaries(): CategorySummary[] {
-  return CATEGORIES.map((c) => {
+  const ordered = [...CATEGORIES].sort(
+    (a, b) => displayRank(a.slug) - displayRank(b.slug),
+  );
+  return ordered.map((c) => {
     const items = readFolder(c.folder, c.kind);
     return {
       category: c,

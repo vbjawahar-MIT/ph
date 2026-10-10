@@ -49,7 +49,7 @@ export default function AllPhotographsPage() {
   );
 
   return (
-    <section className="px-6 pb-32 pt-36 md:px-10 md:pt-44">
+    <section className="section-top section-bottom px-6 md:px-10">
       <header className="mx-auto max-w-2xl text-center">
         <Link
           href="/work"
@@ -77,7 +77,7 @@ export default function AllPhotographsPage() {
         </div>
       </header>
 
-      <div className="mt-10 md:mt-14">
+      <div className="stack">
         <Portfolio
           photos={photos}
           filters={PORTFOLIO_FILTERS}

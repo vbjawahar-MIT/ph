@@ -25,7 +25,7 @@ export default function Footer() {
 
   return (
     <footer className="theme-dark relative bg-noir">
-      <div className="mx-auto max-w-[1440px] px-6 pt-16 md:px-10 md:pt-20">
+      <div className="mx-auto max-w-[1440px] px-6 pt-[clamp(48px,2vw+36px,72px)] md:px-10">
         <div className="grid gap-12 md:grid-cols-12 md:gap-10">
           {/* Signature */}
           <div className="md:col-span-4">
@@ -121,7 +121,7 @@ export default function Footer() {
 
         {/* Extra bottom/left padding keeps the row clear of the fixed
             "VB" back-to-top button in the bottom-left corner. */}
-        <div className="mt-14 flex flex-col gap-2 border-t border-line/10 pb-24 pt-6 md:mt-16 md:flex-row md:items-center md:justify-between md:pb-6 md:pl-20">
+        <div className="stack flex flex-col gap-2 border-t border-line/10 pb-24 pt-6 md:flex-row md:items-center md:justify-between md:pb-6 md:pl-20">
           <p className="text-xs tracking-wide text-ink/50">
             © 2015 — 2026 VB Photographe
           </p>

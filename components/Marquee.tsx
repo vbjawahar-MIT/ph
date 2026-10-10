@@ -9,7 +9,7 @@ export default function Marquee({ items, gradient = true }: Props) {
   // Duplicate items so the -50% translate produces a seamless loop
   const doubled = [...items, ...items];
   return (
-    <div className="relative overflow-hidden border-y border-line/10 py-10 md:py-14">
+    <div className="relative overflow-hidden border-y border-line/10 py-[32px] md:py-[44px]">
       <div className="marquee-track flex whitespace-nowrap">
         {doubled.map((item, i) => (
           <span

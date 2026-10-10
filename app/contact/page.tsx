@@ -34,7 +34,7 @@ export default function ContactPage() {
 
   return (
     <>
-      <section className="px-6 pb-16 pt-36 md:px-10 md:pb-20 md:pt-44">
+      <section className="section-top px-6 pb-[40px] md:px-10 md:pb-[56px]">
         <div className="mx-auto max-w-[1280px] text-center">
           <p className="eyebrow">Say hello</p>
 
@@ -85,7 +85,7 @@ export default function ContactPage() {
       {/* Contact information + enquiry form — "Book Now" scrolls here */}
       <section
         id="enquiry"
-        className="scroll-mt-28 px-6 pb-24 md:px-10 md:pb-32"
+        className="section-bottom scroll-mt-28 px-6 md:px-10"
       >
         <div className="mx-auto grid max-w-[1280px] gap-6 lg:grid-cols-12 lg:gap-8">
           {/* CONTACT INFORMATION */}
@@ -208,7 +208,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="bg-surface-alt px-6 py-24 md:px-10 md:py-28">
+      <section className="section-y bg-surface-alt px-6 md:px-10">
         <div data-reveal className="mx-auto max-w-[1280px]">
           <p className="eyebrow">Elsewhere</p>
           <h2
@@ -217,7 +217,7 @@ export default function ContactPage() {
           >
             Find us <em className="italic text-accent">online</em>
           </h2>
-          <div className="mt-12 grid gap-6 md:grid-cols-2 md:gap-8">
+          <div className="stack grid gap-6 md:grid-cols-2 md:gap-8">
             <InstagramCard />
             <GoogleReviewsCard />
           </div>

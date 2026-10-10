@@ -29,7 +29,7 @@ export default function ContactDetails({ eyebrow, heading }: Props) {
         </h2>
       )}
 
-      <div className="mt-10 grid gap-6 md:mt-14 md:grid-cols-2 md:gap-8">
+      <div className="stack grid gap-6 md:grid-cols-2 md:gap-8">
         {/* Phone */}
         <div className="flex gap-5 rounded-2xl border border-line/10 bg-card p-6 shadow-soft md:p-8">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-accent/30 text-accent">
