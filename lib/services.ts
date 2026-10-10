@@ -4,8 +4,7 @@
  *
  * Covers every specialty the studio lists plus the gallery categories.
  * Photos point at existing gallery files (resolved to hosted URLs at
- * build time); `packages` lists ids from lib/packages.ts so a card can
- * show its starting price without duplicating it here.
+ * build time).
  */
 
 import { getCategoryBySlug } from "./categories";
@@ -21,8 +20,6 @@ export type Service = {
   href: string;
   /** Gallery photograph, or an external thumbnail (candid films). */
   photo: PackagePhoto | { src: string; position?: string };
-  /** Package ids whose lowest price is shown as "Packages from …". */
-  packages?: string[];
   /** Shows a play badge over the photo. */
   video?: boolean;
 };
@@ -35,12 +32,6 @@ export const SERVICES: Service[] = [
       "Traditional and candid coverage of your rituals, ceremony and reception.",
     href: "/work/couple-portrait",
     photo: { folder: "couple-portrait", file: "135.jpg", position: "50% 30%" },
-    packages: [
-      "wedding-basic",
-      "wedding-standard",
-      "wedding-premium",
-      "wedding-premium-plus",
-    ],
   },
   {
     id: "engagement",
@@ -48,7 +39,6 @@ export const SERVICES: Service[] = [
     description: "The rings, the families and your first portraits together.",
     href: "/work/couple-portrait",
     photo: { folder: "couple-portrait", file: "153.jpg", position: "50% 35%" },
-    packages: ["engagement"],
   },
   {
     id: "pre-wedding",
@@ -84,7 +74,6 @@ export const SERVICES: Service[] = [
     description: "Blessings, rituals and family — the day before the day.",
     href: "/work/baby-shower",
     photo: { folder: "baby-shower", file: "192.JPG", position: "50% 30%" },
-    packages: ["baby-shower-basic", "baby-shower-standard"],
   },
   {
     id: "maternity",
@@ -99,7 +88,6 @@ export const SERVICES: Service[] = [
     description: "One afternoon, one small ceremony — held close.",
     href: "/work/puberty",
     photo: { folder: "puberty", file: "207.JPG", position: "50% 25%" },
-    packages: ["puberty-premium"],
   },
   {
     id: "birthday",

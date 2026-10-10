@@ -1,9 +1,9 @@
 /**
  * Photography packages shown on /packages.
  *
- * Edit prices and inclusions here — the page and its cards read only
- * from this file. Prices are whole rupees; the page formats them with
- * Indian digit grouping (1,25,000). Photos point at existing gallery
+ * Edit packages and inclusions here — the page and its cards read only
+ * from this file. Prices are deliberately not shown on the site; visitors
+ * enquire through "Book Your Slot". Photos point at existing gallery
  * files and are resolved to their hosted URLs at build time.
  */
 
@@ -25,10 +25,18 @@ export type PhotoPackage = {
   name: string;
   /** Second line under the name, e.g. "Basic" / "Standard". */
   tier?: string;
-  price: number;
   photo: PackagePhoto;
+  /** Jewel-tone card colour for the top tiers (see .theme-* in globals.css). */
+  highlight?: "emerald" | "ruby";
   inclusions: Inclusion[];
+  /**
+   * Free extras, shown in a highlighted gold voucher under the list —
+   * one or more groups of tags, each with an optional heading.
+   */
+  complimentary?: ComplimentaryGroup[];
 };
+
+export type ComplimentaryGroup = { title?: string; items: Inclusion[] };
 
 export type PackageGroup = {
   id: string;
@@ -42,14 +50,40 @@ export type PackageGroup = {
   packages: PhotoPackage[];
 };
 
-const CORE = (n: { video: number; photo: number }): Inclusion[] => [
+const TRADITIONAL = (n: { video: number; photo: number }): Inclusion[] => [
   { label: "Traditional Video", qty: n.video },
   { label: "Traditional Photo", qty: n.photo },
-  { label: "Candid Photo", qty: 1 },
-  { label: "Candid Video", qty: 1 },
+];
+const CANDID_PHOTO: Inclusion = { label: "Candid Photo", qty: 1 };
+const CANDID_VIDEO: Inclusion = { label: "Candid Video", qty: 1 };
+
+const CORE = (n: { video: number; photo: number }): Inclusion[] => [
+  ...TRADITIONAL(n),
+  CANDID_PHOTO,
+  CANDID_VIDEO,
 ];
 
-const DRONE: Inclusion = { label: "Drone (Reception + Wedding)" };
+const DRONE: Inclusion = { label: "Drone (Reception + Wedding)", qty: 1 };
+
+/** Complimentary pre- or post-wedding shoot offered with wedding packages. */
+const PRE_POST_WEDDING = "Pre-Wedding or Post-Wedding";
+const CEREMONIES: ComplimentaryGroup = {
+  items: [{ label: "Haldi Ceremony" }, { label: "Mehendi Function" }],
+};
+const PRE_POST_PHOTO = { title: PRE_POST_WEDDING, items: [{ label: "Photo" }] };
+const PRE_POST_FULL = (magazineBooks: number, extra: Inclusion[] = []) => ({
+  title: PRE_POST_WEDDING,
+  // Ordered so the tags pack into as few rows as possible on a card.
+  items: [
+    { label: "Photo" },
+    { label: "Video" },
+    { label: "E-Invitation" },
+    { label: "Couple Magazine Book", qty: magazineBooks },
+    { label: "Reels" },
+    { label: "Save-the-Date Video" },
+    ...extra,
+  ],
+});
 
 export const PACKAGE_GROUPS: PackageGroup[] = [
   {
@@ -63,51 +97,51 @@ export const PACKAGE_GROUPS: PackageGroup[] = [
       {
         id: "wedding-basic",
         name: "Basic",
-        price: 45000,
         photo: { folder: "couple-portrait", file: "138.jpg", position: "50% 30%" },
         inclusions: [
-          ...CORE({ video: 1, photo: 1 }),
+          ...TRADITIONAL({ video: 1, photo: 1 }),
           { label: "Premium Album", qty: 1 },
           { label: "Album (50 Sheets)", qty: 1 },
-          { label: "Photo Frame", qty: 1 },
+          { label: "Photo Frame", qty: 2 },
           { label: "Photo Calendar", qty: 1 },
           { label: "Pendrive Box", qty: 1 },
         ],
+        complimentary: [PRE_POST_PHOTO],
       },
       {
         id: "wedding-standard",
         name: "Standard",
-        price: 65000,
         photo: { folder: "couple-portrait", file: "184.jpg", position: "50% 45%" },
         inclusions: [
-          ...CORE({ video: 1, photo: 1 }),
+          ...TRADITIONAL({ video: 1, photo: 1 }),
+          CANDID_PHOTO,
           { label: "Premium Album", qty: 1 },
           { label: "Album (50 Sheets)", qty: 1 },
-          { label: "Photo Frame", qty: 1 },
-          // Quantity left blank in the source price list — confirm.
-          { label: "Photo Calendar" },
+          { label: "Photo Frame", qty: 2 },
+          { label: "Photo Calendar", qty: 1 },
           { label: "Pendrive Box", qty: 1 },
         ],
+        complimentary: [PRE_POST_PHOTO, CEREMONIES],
       },
       {
         id: "wedding-premium",
         name: "Premium",
-        price: 125000,
         photo: { folder: "bridal", file: "9.jpg", position: "50% 35%" },
         inclusions: [
           ...CORE({ video: 1, photo: 1 }),
-          { label: "Premium Album", qty: 1 },
+          { label: "Premium Album", qty: 2 },
           { label: "Album (80 Sheets)", qty: 1 },
-          { label: "Photo Frame", qty: 1 },
+          { label: "Photo Frame", qty: 2 },
           { label: "Photo Calendar", qty: 2 },
           { label: "Pendrive Box", qty: 1 },
         ],
+        complimentary: [PRE_POST_FULL(1), CEREMONIES],
       },
       {
         id: "wedding-premium-plus",
         name: "Premium Plus",
-        price: 165000,
-        photo: { folder: "couple-portrait", file: "185.jpg", position: "50% 30%" },
+        highlight: "emerald",
+        photo: { folder: "couple-portrait", file: "160.jpg", position: "40% 25%" },
         inclusions: [
           ...CORE({ video: 2, photo: 2 }),
           DRONE,
@@ -117,74 +151,84 @@ export const PACKAGE_GROUPS: PackageGroup[] = [
           { label: "Photo Calendar", qty: 2 },
           { label: "Pendrive Box", qty: 2 },
         ],
+        complimentary: [PRE_POST_FULL(1, [{ label: "Drone" }]), CEREMONIES],
+      },
+      {
+        id: "wedding-elite",
+        name: "Elite",
+        highlight: "ruby",
+        photo: { folder: "couple-portrait", file: "144.jpg", position: "55% 35%" },
+        inclusions: [
+          ...CORE({ video: 3, photo: 3 }),
+          DRONE,
+          { label: "Spinner 360", qty: 1 },
+          { label: "LED Wall", qty: 1 },
+          { label: "Live Streaming", qty: 1 },
+          { label: "Premium Album", qty: 3 },
+          { label: "Album (120 Sheets)", qty: 1 },
+          { label: "Photo Frame", qty: 4 },
+          { label: "Photo Calendar", qty: 2 },
+          { label: "Pendrive Box", qty: 2 },
+        ],
+        complimentary: [PRE_POST_FULL(2, [{ label: "Drone" }]), CEREMONIES],
       },
     ],
   },
   {
     id: "celebration-packages",
-    title: "Engagement, Baby Shower & Puberty Packages",
+    title: "Engagement, Baby Shower, Puberty, Birthday Shoot & Housewarming Packages",
     accent: "Packages",
     tagline: "Celebrating every special chapter",
     badge: { icon: "family", title: "Every Celebration", text: "Deserves Beautiful Memories" },
+    subjectPrefix: "Celebration Package",
     packages: [
       {
-        id: "engagement",
-        name: "Engagement Package",
-        price: 245000,
-        photo: { folder: "couple-portrait", file: "144.jpg", position: "55% 35%" },
+        id: "celebration-basic",
+        name: "Basic",
+        photo: { folder: "puberty", file: "210.JPG", position: "50% 42%" },
         inclusions: [
-          ...CORE({ video: 2, photo: 2 }),
-          DRONE,
-          { label: "Premium Album", qty: 2 },
-          { label: "Album (80 Sheets)", qty: 1 },
-          { label: "Photo Frame", qty: 2 },
-          { label: "Photo Calendar", qty: 2 },
-          { label: "Pendrive Box", qty: 2 },
-        ],
-      },
-      {
-        id: "baby-shower-basic",
-        name: "Baby Shower Package",
-        tier: "Basic",
-        price: 30000,
-        photo: { folder: "baby-shower", file: "195.JPG", position: "40% 30%" },
-        inclusions: [
-          ...CORE({ video: 1, photo: 1 }),
+          ...TRADITIONAL({ video: 1, photo: 1 }),
           { label: "Premium Album", qty: 1 },
-          { label: "Album (50 Sheets)", qty: 1 },
+          { label: "Album (30 Sheets)", qty: 1 },
           { label: "Photo Frame", qty: 1 },
           { label: "Photo Calendar", qty: 1 },
           { label: "Pendrive Box", qty: 1 },
         ],
       },
       {
-        id: "baby-shower-standard",
-        name: "Baby Shower Package",
-        tier: "Standard",
-        price: 40000,
-        photo: { folder: "baby-shower", file: "193.JPG", position: "50% 30%" },
+        id: "celebration-standard",
+        name: "Standard",
+        photo: { folder: "baby-shower", file: "189.JPG", position: "50% 33%" },
         inclusions: [
-          ...CORE({ video: 1, photo: 1 }),
+          ...TRADITIONAL({ video: 1, photo: 1 }),
+          CANDID_PHOTO,
           { label: "Premium Album", qty: 1 },
-          { label: "Album (80 Sheets)", qty: 1 },
-          { label: "Photo Frame", qty: 2 },
-          { label: "Photo Calendar", qty: 2 },
+          { label: "Album (40 Sheets)", qty: 1 },
+          { label: "Photo Frame", qty: 1 },
+          { label: "Photo Calendar", qty: 1 },
           { label: "Pendrive Box", qty: 1 },
         ],
       },
       {
-        id: "puberty-premium",
-        name: "Puberty Package",
-        tier: "Premium",
-        price: 65000,
+        id: "celebration-premium",
+        name: "Premium",
         photo: { folder: "puberty", file: "200.jpg", position: "50% 30%" },
         inclusions: [
           ...CORE({ video: 1, photo: 1 }),
           { label: "Premium Album", qty: 1 },
-          { label: "Album (80 Sheets)", qty: 1 },
+          { label: "Album (50 Sheets)", qty: 1 },
           { label: "Photo Frame", qty: 2 },
-          { label: "Photo Calendar", qty: 2 },
+          { label: "Photo Calendar", qty: 1 },
           { label: "Pendrive Box", qty: 1 },
+        ],
+        complimentary: [
+          {
+            items: [
+              { label: "Magazine Book", qty: 1 },
+              { label: "E-Invitation" },
+              { label: "Reels" },
+            ],
+          },
         ],
       },
     ],
@@ -200,27 +244,13 @@ export const PACKAGES_CAROUSEL: (PackagePhoto & { label: string; title: string }
   { folder: "puberty", file: "202.JPG", position: "45% 40%", label: "Puberty", title: "One afternoon, one small ceremony." },
 ];
 
-/** 1,25,000 — Indian digit grouping. */
-export function formatAmount(amount: number) {
-  return new Intl.NumberFormat("en-IN").format(amount);
-}
-
-/** ₹1,25,000/- style, matching the studio's price list. */
-export function formatRupees(amount: number) {
-  return `₹${formatAmount(amount)}/-`;
-}
-
-/** Top-tier cards (those with drone coverage) get the dark treatment. */
+/** Top-tier cards (those with drone coverage) get the featured treatment. */
 export function isFeatured(pkg: PhotoPackage) {
   return pkg.inclusions.some((i) => i.label.startsWith("Drone"));
 }
 
 /** Subject line the contact form is pre-filled with for a package. */
 export function enquirySubject(group: PackageGroup, pkg: PhotoPackage) {
-  const name = group.subjectPrefix
-    ? `${group.subjectPrefix} — ${pkg.name}`
-    : pkg.tier
-      ? `${pkg.name} — ${pkg.tier}`
-      : pkg.name;
-  return `${name} (${formatRupees(pkg.price)})`;
+  if (group.subjectPrefix) return `${group.subjectPrefix} — ${pkg.name}`;
+  return pkg.tier ? `${pkg.name} — ${pkg.tier}` : pkg.name;
 }

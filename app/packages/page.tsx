@@ -16,7 +16,7 @@ import { SITE } from "@/lib/site-config";
 export const metadata: Metadata = {
   title: "Packages — VB Photographe",
   description:
-    "Wedding, engagement, baby shower and puberty photography packages from VB Photographe, Salem — traditional and candid photo and video, albums, frames and more.",
+    "Wedding, engagement, baby shower, puberty, birthday and housewarming photography packages from VB Photographe, Salem — traditional and candid photo and video, albums, frames and more.",
 };
 
 /** Hosted URL for a gallery file, or null if it has been renamed. */
@@ -103,24 +103,28 @@ export default function PackagesPage() {
               <Sprig className="pointer-events-none absolute -right-10 top-24 hidden h-56 w-auto rotate-[200deg] text-gold/45 lg:block" />
             </>
           )}
-          <div className="relative mx-auto max-w-[1440px]">
+          {/* Wider than the rest of the page so five cards stay short. */}
+          <div className="relative mx-auto max-w-[1800px]">
             <GroupHeader group={group} />
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 md:mt-14 xl:grid-cols-4 xl:gap-7">
-              {group.packages.map((pkg, n) => (
-                <div
-                  key={pkg.id}
-                  data-reveal
-                  className="h-full"
-                  style={{ "--reveal-delay": `${(n % 4) * 90}ms` } as React.CSSProperties}
-                >
-                  <PackageCard
-                    index={n + 1}
-                    pkg={pkg}
-                    photoSrc={photoSrc(pkg.photo)}
-                    subject={enquirySubject(group, pkg)}
-                  />
-                </div>
-              ))}
+            {/* Cards per row follow the text size (see .pkg-grid). */}
+            <div className="pkg-grid mt-12 md:mt-14">
+              <div className="pkg-row">
+                {group.packages.map((pkg, n) => (
+                  <div
+                    key={pkg.id}
+                    data-reveal
+                    className="pkg-cell"
+                    style={{ "--reveal-delay": `${n * 80}ms` } as React.CSSProperties}
+                  >
+                    <PackageCard
+                      index={n + 1}
+                      pkg={pkg}
+                      photoSrc={photoSrc(pkg.photo)}
+                      subject={enquirySubject(group, pkg)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>

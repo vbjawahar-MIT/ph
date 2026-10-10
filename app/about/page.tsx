@@ -6,11 +6,7 @@ import StatsRow from "@/components/about/StatsRow";
 import ServiceCard from "@/components/about/ServiceCard";
 import ProtectedImage from "@/components/gallery/ProtectedImage";
 import { readFolder } from "@/lib/gallery";
-import {
-  PACKAGE_GROUPS,
-  formatRupees,
-  type PackagePhoto,
-} from "@/lib/packages";
+import type { PackagePhoto } from "@/lib/packages";
 import { SERVICES, STORY_PHOTOS } from "@/lib/services";
 import { SITE } from "@/lib/site-config";
 
@@ -41,22 +37,12 @@ const MILESTONES = [
   },
 ];
 
-const ALL_PACKAGES = PACKAGE_GROUPS.flatMap((g) => g.packages);
-
 /** Hosted URL for a gallery file, or null if it has been renamed. */
 function galleryPhoto(photo: PackagePhoto) {
   return (
     readFolder(photo.folder, "images").find((i) => i.file === photo.file)
       ?.src ?? null
   );
-}
-
-/** Lowest price among the given package ids, formatted. */
-function fromPrice(ids?: string[]) {
-  const prices = ALL_PACKAGES.filter((p) => ids?.includes(p.id)).map(
-    (p) => p.price,
-  );
-  return prices.length ? formatRupees(Math.min(...prices)) : null;
 }
 
 export default function AboutPage() {
@@ -285,7 +271,6 @@ export default function AboutPage() {
                   href={s.href}
                   photoSrc={"src" in s.photo ? s.photo.src : galleryPhoto(s.photo)}
                   position={s.photo.position}
-                  fromPrice={fromPrice(s.packages)}
                   video={s.video}
                 />
               </li>

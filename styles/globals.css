@@ -31,6 +31,235 @@
   color: rgb(var(--ink));
 }
 
+/*
+ * Jewel-tone silk themes for the top package tiers (emerald, ruby).
+ * Tokens flip like .theme-dark, so text, ticks and chips follow; the
+ * background layers a warm gold glow and a faint brocade dot over a
+ * deep silk gradient.
+ */
+.theme-emerald,
+.theme-ruby {
+  --ink: 255 248 235;
+  --accent: 232 201 135;
+  --line: 255 236 200;
+  color: rgb(var(--ink));
+  border-color: rgb(232 201 135 / 0.55);
+}
+.theme-emerald {
+  --surface-alt: 22 92 73;
+  --card: 10 64 51;
+  background:
+    radial-gradient(110% 45% at 50% 30%, rgb(232 201 135 / 0.2), transparent 70%),
+    radial-gradient(rgb(232 201 135 / 0.07) 1px, transparent 1.6px) 0 0 / 14px 14px,
+    linear-gradient(165deg, #12644f 0%, #0b4537 50%, #052a21 100%);
+  box-shadow:
+    0 30px 60px -26px rgb(5 42 33 / 0.65),
+    0 0 0 1px rgb(232 201 135 / 0.18) inset;
+}
+.theme-ruby {
+  --surface-alt: 122 28 50;
+  --card: 92 15 36;
+  background:
+    radial-gradient(110% 45% at 50% 30%, rgb(232 201 135 / 0.22), transparent 70%),
+    radial-gradient(rgb(232 201 135 / 0.07) 1px, transparent 1.6px) 0 0 / 14px 14px,
+    linear-gradient(165deg, #861a35 0%, #5c0e24 50%, #340614 100%);
+  box-shadow:
+    0 30px 60px -26px rgb(52 6 20 / 0.7),
+    0 0 0 1px rgb(232 201 135 / 0.18) inset;
+}
+
+/*
+ * Package card rows: a container query on the row's width picks the
+ * column count — all five cards from 1320px (the narrowest that keeps
+ * items like "Album (50 Sheets)" on one line), 3 + 2 on smaller
+ * laptops, then 2 and 1. Short last rows stay centred. Widths are px
+ * because the cards are px-sized (see PackageCard), so the layout looks
+ * the same whatever text size the browser is set to.
+ */
+.pkg-grid {
+  container-type: inline-size;
+}
+.pkg-row {
+  --pkg-gap: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--pkg-gap);
+}
+.pkg-cell {
+  width: 100%;
+}
+.pkg-body {
+  padding: 24px;
+}
+@container (min-width: 544px) {
+  .pkg-cell {
+    width: calc((100% - var(--pkg-gap)) / 2);
+  }
+}
+@container (min-width: 832px) {
+  .pkg-row {
+    --pkg-gap: 28px;
+  }
+  .pkg-cell {
+    width: calc((100% - 2 * var(--pkg-gap)) / 3);
+  }
+}
+@container (min-width: 1320px) {
+  .pkg-row {
+    --pkg-gap: 24px;
+  }
+  .pkg-cell {
+    width: calc((100% - 4 * var(--pkg-gap)) / 5);
+  }
+  .pkg-body {
+    padding: 22px;
+  }
+}
+
+/*
+ * Package card photo: 16:10, flattening to 2:1 once a card is wider
+ * than 320px so wide cards don't grow taller.
+ */
+.pkg-cell {
+  container: pkg-card / inline-size;
+}
+.pkg-photo {
+  aspect-ratio: 16 / 10;
+}
+@container pkg-card (min-width: 320px) {
+  .pkg-photo {
+    aspect-ratio: 2 / 1;
+  }
+}
+
+/*
+ * "Complimentary" gift voucher on package cards. A gold-foil header with
+ * a shine that passes every few seconds, then a perforated edge — two
+ * notches cut by the mask plus a dashed line — over a warm gold body.
+ * Body colours use the accent token, so it suits white and jewel cards.
+ * The mask would clip a box-shadow, so the glow is a drop-shadow on the
+ * wrapper instead.
+ */
+.pkg-gift-wrap {
+  filter: drop-shadow(0 12px 16px rgb(201 165 92 / 0.32));
+}
+.pkg-gift {
+  --gift-head: 46px;
+  --gift-notch: 8px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 90% at 100% 100%, rgb(220 192 138 / 0.22), transparent 65%),
+    linear-gradient(180deg, rgb(220 192 138 / 0.24), rgb(220 192 138 / 0.12));
+  box-shadow: inset 0 0 0 1px rgb(201 165 92 / 0.45);
+  -webkit-mask:
+    radial-gradient(circle var(--gift-notch) at 0 var(--gift-head), #0000 96%, #000),
+    radial-gradient(circle var(--gift-notch) at 100% var(--gift-head), #0000 96%, #000);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.pkg-gift-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--gift-head);
+  padding: 0 16px;
+  color: #0b0b0b;
+  background: linear-gradient(120deg, #f4e3b4 0%, #ddbd78 42%, #c49b52 70%, #a9823f 100%);
+  overflow: hidden;
+}
+.pkg-gift-head::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgb(255 255 255 / 0.6) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  animation: gift-shine 5s ease-in-out infinite;
+}
+.pkg-gift-body {
+  position: relative;
+  padding: 14px 14px 16px;
+}
+/* Perforation between the notches */
+.pkg-gift-body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(var(--gift-notch) + 6px);
+  right: calc(var(--gift-notch) + 6px);
+  border-top: 2px dashed rgb(var(--accent) / 0.5);
+}
+@keyframes gift-shine {
+  0%,
+  50% {
+    transform: translateX(-120%);
+  }
+  80%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pkg-gift-head::after {
+    animation: none;
+    display: none;
+  }
+}
+
+.theme-emerald.pkg-jewel:hover,
+.theme-ruby.pkg-jewel:hover {
+  border-color: rgb(232 201 135 / 0.9);
+  box-shadow:
+    0 36px 70px -26px rgb(24 21 18 / 0.55),
+    0 0 46px -10px rgb(232 201 135 / 0.45);
+}
+
+/* A slow band of gold light glides across a jewel card every few seconds. */
+.pkg-jewel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgb(255 236 190 / 0.16) 48%,
+    rgb(255 236 190 / 0.05) 54%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  animation: jewel-sheen 7s var(--ease-expo, ease-in-out) infinite;
+}
+.theme-ruby.pkg-jewel::after {
+  animation-delay: 3.5s;
+}
+@keyframes jewel-sheen {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  85%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pkg-jewel::after {
+    animation: none;
+    display: none;
+  }
+}
+
 :root {
   --ease-expo: cubic-bezier(0.76, 0, 0.24, 1);
   --gold: #c9a55c;

@@ -8,8 +8,6 @@ type Props = {
   href: string;
   photoSrc: string | null;
   position?: string;
-  /** Formatted starting price, e.g. "₹45,000/-". */
-  fromPrice?: string | null;
   video?: boolean;
 };
 
@@ -27,7 +25,6 @@ export default function ServiceCard({
   href,
   photoSrc,
   position,
-  fromPrice,
   video = false,
 }: Props) {
   return (
@@ -80,22 +77,12 @@ export default function ServiceCard({
         </p>
 
         <div className="mt-auto flex items-end justify-between gap-3 pt-4 sm:pt-6">
-          {fromPrice ? (
-            <p className="text-[0.7rem] leading-tight text-ink/55 sm:text-xs">
-              <span className="sm:hidden">From</span>
-              <span className="hidden sm:inline">Packages from</span>
-              <span className="mt-0.5 block font-serif text-base font-semibold text-ink sm:text-lg">
-                {fromPrice}
-              </span>
-            </p>
-          ) : (
-            <span className="ui-label whitespace-nowrap text-[0.62rem] text-ink/45 sm:text-[0.68rem]">
-              <span className="sm:hidden">{video ? "Films" : "Gallery"}</span>
-              <span className="hidden sm:inline">
-                {video ? "Watch films" : "View gallery"}
-              </span>
+          <span className="ui-label whitespace-nowrap text-[0.62rem] text-ink/45 sm:text-[0.68rem]">
+            <span className="sm:hidden">{video ? "Films" : "Gallery"}</span>
+            <span className="hidden sm:inline">
+              {video ? "Watch films" : "View gallery"}
             </span>
-          )}
+          </span>
           <span
             aria-hidden
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line/15 text-ink transition-all duration-500 ease-expo group-hover:border-gold group-hover:bg-gold group-hover:text-noir sm:h-10 sm:w-10"
